@@ -227,6 +227,16 @@
       </svg>
       <h1>Hello, {{ title }}</h1>
       <p>Congratulations! Your app is running. 🎉</p>
+      <p>{{testacnh()}}</p>
+      <div>
+        <form [formGroup]="searchForm" (ngSubmit)="onSearch()">
+          <input type="text" formControlName="searchTerm" placeholder="Search...">
+          <button type="submit">Search</button>
+        </form>
+        <ul>
+          <li *ngFor="let result of searchResults">{{ result }}</li>
+        </ul>
+      </div>
     </div>
     <div class="divider" role="separator" aria-label="Divider"></div>
     <div class="right-side">
