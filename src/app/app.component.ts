@@ -34,7 +34,7 @@ export class AppComponent {
     this.searchResults = this.mockSearch(searchTerm);
   }
   mockSearch(searchTerm: string): string[] {
-    const villagerbirthday = villagers.filter(villager => villager.birthday.toLowerCase().includes(searchTerm.toLowerCase())).map(villager => villager.birthday);
+    const villagerbirthday = villagers.filter(villager => villager.name.toLowerCase().includes(searchTerm.toLowerCase())).map(villager => villager.name);
     return villagerbirthday;
     
   }
