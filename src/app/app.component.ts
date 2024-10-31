@@ -5,12 +5,24 @@ import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { HttpClientModule, provideHttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { ApiService } from './api.service';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatListModule } from '@angular/material/list';
+import { MatTableModule } from '@angular/material/table';
 
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [RouterOutlet, ReactiveFormsModule, CommonModule, HttpClientModule],
+  imports: [RouterOutlet, 
+    ReactiveFormsModule, 
+    CommonModule, 
+    HttpClientModule, 
+    MatFormFieldModule,
+    MatInputModule,
+    MatListModule,
+    MatTableModule,
+  ],
   // providers: [provideHttpClient()],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
@@ -43,10 +55,11 @@ export class AppComponent implements OnInit{
   // }
   data: any[] = [];
   filteredData: any[] = [];
+  displayedColumns: string[] = ['name'];
 
   constructor(private apiService: ApiService, private formBuilder: FormBuilder) {
        this.searchForm = this.formBuilder.group({
-      searchTerm: ['']  // Input tìm kiếm
+      keyword: ['']  // Input tìm kiếm
     });
   }
 
@@ -61,7 +74,7 @@ export class AppComponent implements OnInit{
       }
     );
 
-    this.searchForm.get('searchTerm')?.valueChanges.subscribe((value) => {
+    this.searchForm.get('keyword')?.valueChanges.subscribe((value) => {
       this.searchData(value);
     });
 
