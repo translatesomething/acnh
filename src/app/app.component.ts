@@ -55,7 +55,7 @@ export class AppComponent implements OnInit{
   // }
   data: any[] = [];
   filteredData: any[] = [];
-  displayedColumns: string[] = ['name'];
+  displayedColumns: string[] = ['name','name', 'species', 'gender', 'personality', 'birthday'];
 
   constructor(private apiService: ApiService, private formBuilder: FormBuilder) {
        this.searchForm = this.formBuilder.group({
@@ -83,7 +83,8 @@ export class AppComponent implements OnInit{
 
 searchData(keyword: string) {
   this.filteredData = this.data.filter((data) =>
-    data.name.toLowerCase().includes(keyword.toLowerCase())
+    data.name.toLowerCase().includes(keyword.toLowerCase()) &&
+  data.appearances.includes("NH")
   );
 }
 
