@@ -1,27 +1,104 @@
-# Acnh
+# Animal Crossing: New Horizons - Villager Search
 
-This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 18.2.9.
+Ứng dụng tìm kiếm và xem thông tin villagers từ Animal Crossing, được xây dựng với **Next.js** và **React**.
 
-## Development server
+🌐 **Live Demo**: [GitHub Pages](https://your-username.github.io/acnh/)
 
-Run `ng serve` for a dev server. Navigate to `http://localhost:4200/`. The application will automatically reload if you change any of the source files.
+## Công nghệ sử dụng
 
-## Code scaffolding
+- **Next.js 15** - React framework với App Router
+- **React 19** - UI library
+- **JavaScript** - Ngôn ngữ lập trình
+- **CSS3** - Styling với CSS Variables và Animations
 
-Run `ng generate component component-name` to generate a new component. You can also use `ng generate directive|pipe|service|class|guard|interface|enum|module`.
+## Tính năng
 
-## Build
+- 🔍 Tìm kiếm villagers theo tên, loài, hoặc tính cách
+- 📋 Hiển thị danh sách villagers với thông tin chi tiết
+- 🎮 Xem các game mà villager đã xuất hiện
+- 📋 Copy tên game bằng double-click
+- 🌓 Dark mode / Light mode
+- 📱 Responsive design cho mobile và desktop
+- ✨ Animations và transitions mượt mà
 
-Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
+## Cài đặt
 
-## Running unit tests
+```bash
+# Cài đặt dependencies
+npm install
 
-Run `ng test` to execute the unit tests via [Karma](https://karma-runner.github.io).
+# Chạy development server
+npm run dev
 
-## Running end-to-end tests
+# Build cho production
+npm run build
 
-Run `ng e2e` to execute the end-to-end tests via a platform of your choice. To use this command, you need to first add a package that implements end-to-end testing capabilities.
+# Chạy production server
+npm start
+```
 
-## Further help
+Mở [http://localhost:3000](http://localhost:3000) để xem ứng dụng.
 
-To get more help on the Angular CLI use `ng help` or go check out the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+## Cấu trúc dự án
+
+```
+├── app/
+│   ├── layout.js          # Root layout
+│   ├── page.js            # Home page
+│   └── globals.css        # Global styles
+├── components/
+│   ├── CopyNotification.js    # Copy notification component
+│   ├── ThemeToggle.js          # Dark mode toggle
+│   └── VillagerDetails.js      # Villager details modal
+├── lib/
+│   ├── api.js             # API service
+│   ├── game-mapping.js     # Game name mapping utility
+│   └── theme.js           # Theme context
+└── public/
+    └── acnh-logo.png       # Logo image
+```
+
+## Setup Environment Variables
+
+1. Copy file `env.example` thành `.env.local`:
+```bash
+cp env.example .env.local
+```
+
+2. Thêm API key của bạn vào `.env.local`:
+```
+NEXT_PUBLIC_NOOKIPEDIA_API_KEY=your_api_key_here
+NEXT_PUBLIC_NOOKIPEDIA_API_URL=https://api.nookipedia.com
+```
+
+Lấy API key tại: [Nookipedia API](https://api.nookipedia.com/)
+
+## Deploy lên GitHub Pages
+
+### Cách 1: Tự động với GitHub Actions (Khuyến nghị)
+
+1. Push code lên GitHub repository
+2. Vào **Settings** > **Pages** trong repository
+3. Chọn **Source**: "GitHub Actions"
+4. Thêm API key vào **Secrets**:
+   - Vào **Settings** > **Secrets and variables** > **Actions**
+   - Thêm secret mới: `NOOKIPEDIA_API_KEY` với giá trị API key của bạn
+5. Push code lên branch `main` - GitHub Actions sẽ tự động deploy
+
+### Cách 2: Deploy thủ công
+
+```bash
+# Build static files
+npm run build
+
+# Deploy lên gh-pages branch
+npx gh-pages -d out
+```
+
+## API
+
+Ứng dụng sử dụng [Nookipedia API](https://api.nookipedia.com/) để lấy dữ liệu villagers.
+
+## License
+
+MIT
