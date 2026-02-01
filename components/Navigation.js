@@ -112,16 +112,24 @@ export default function Navigation({ activeTab, onTabChange }) {
         }
 
         .nav-item.active {
-          background: var(--acnh-green);
+          background: linear-gradient(135deg, 
+            var(--acnh-green) 0%, 
+            #6bb8a3 50%,
+            var(--acnh-blue) 100%);
           color: white;
-          border-color: var(--acnh-green);
-          box-shadow: 0 4px 12px rgba(130, 207, 156, 0.3);
+          border-color: transparent;
+          box-shadow: 0 4px 12px rgba(130, 207, 156, 0.4),
+                      0 2px 6px rgba(0, 0, 0, 0.1);
         }
 
         .nav-item.active:hover {
-          background: var(--acnh-brown);
-          border-color: var(--acnh-brown);
+          background: linear-gradient(135deg, 
+            #6bb8a3 0%, 
+            var(--acnh-green) 50%,
+            #7bc4d1 100%);
           transform: translateY(-2px) scale(1.05);
+          box-shadow: 0 6px 16px rgba(130, 207, 156, 0.5),
+                      0 4px 8px rgba(0, 0, 0, 0.15);
         }
 
         .nav-item:disabled {

@@ -17,6 +17,13 @@ export default function Home() {
   const [selectedSpecies, setSelectedSpecies] = useState(null);
   const [selectedPersonality, setSelectedPersonality] = useState(null);
   const [selectedGame, setSelectedGame] = useState('NH'); // Default to New Horizons
+  const [isRandomMode, setIsRandomMode] = useState(() => {
+    // Check if random mode was active in previous session
+    if (typeof window !== 'undefined') {
+      return sessionStorage.getItem('randomMode') === 'true';
+    }
+    return false;
+  });
   const [selectedVillager, setSelectedVillager] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
   const [copyNotification, setCopyNotification] = useState(false);
@@ -60,7 +67,14 @@ export default function Home() {
 
   useEffect(() => {
     filterData();
-  }, [searchKeyword, selectedSpecies, selectedPersonality, selectedGame, villagers]);
+  }, [searchKeyword, selectedSpecies, selectedPersonality, selectedGame, villagers, isRandomMode]);
+
+  // Random 5 villagers when random mode is enabled or on page load if random mode was active
+  useEffect(() => {
+    if (isRandomMode && villagers.length > 0) {
+      getRandomVillagers();
+    }
+  }, [isRandomMode, villagers]);
 
   const loadVillagers = async () => {
     try {
@@ -75,7 +89,29 @@ export default function Home() {
     }
   };
 
+  const getRandomVillagers = () => {
+    if (villagers.length === 0) return;
+    
+    // Shuffle array and pick 5 random villagers
+    const shuffled = [...villagers].sort(() => Math.random() - 0.5);
+    const randomFive = shuffled.slice(0, 5);
+    setFilteredData(randomFive);
+  };
+
+  const exitRandomMode = () => {
+    setIsRandomMode(false);
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('randomMode');
+    }
+  };
+
   const filterData = () => {
+    // If random mode is active, don't apply other filters
+    if (isRandomMode) {
+      getRandomVillagers();
+      return;
+    }
+
     let filtered = [...villagers];
 
     // Search filter
@@ -113,16 +149,38 @@ export default function Home() {
     setFilteredData(filtered);
   };
 
-  const clearFilters = () => {
+  const clearFilters = (e) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     setSearchKeyword('');
     setSelectedSpecies(null);
     setSelectedPersonality(null);
     setSelectedGame('NH'); // Reset to default New Horizons
+    setIsRandomMode(false);
+    // Remove from sessionStorage
+    if (typeof window !== 'undefined') {
+      sessionStorage.removeItem('randomMode');
+    }
+  };
+
+  const handleRandomClick = () => {
+    setIsRandomMode(true);
+    // Save to sessionStorage
+    if (typeof window !== 'undefined') {
+      sessionStorage.setItem('randomMode', 'true');
+    }
+    // Clear other filters when entering random mode
+    setSearchKeyword('');
+    setSelectedSpecies(null);
+    setSelectedPersonality(null);
+    setSelectedGame('NH');
   };
 
   // Check if game filter is different from default (NH)
   const hasNonDefaultGameFilter = selectedGame && selectedGame !== 'NH';
-  const hasActiveFilters = searchKeyword || selectedSpecies || selectedPersonality || hasNonDefaultGameFilter;
+  const hasActiveFilters = searchKeyword || selectedSpecies || selectedPersonality || hasNonDefaultGameFilter || isRandomMode;
 
   const showVillagerDetails = async (villager) => {
     try {
@@ -173,9 +231,18 @@ export default function Home() {
               <input
                 type="text"
                 className="search-input"
-                placeholder="Search by name, species, or personality..."
+                placeholder={isRandomMode ? "Random mode active - clear to search" : "Search by name, species, or personality..."}
                 value={searchKeyword}
-                onChange={(e) => setSearchKeyword(e.target.value)}
+                onChange={(e) => {
+                  setSearchKeyword(e.target.value);
+                  if (e.target.value.trim() && isRandomMode) {
+                    setIsRandomMode(false);
+                    if (typeof window !== 'undefined') {
+                      sessionStorage.removeItem('randomMode');
+                    }
+                  }
+                }}
+                disabled={isRandomMode}
               />
               {searchKeyword && (
                 <button
@@ -198,16 +265,30 @@ export default function Home() {
               </label>
               <div className="filter-buttons">
                 <button
-                  className={`filter-btn ${!selectedSpecies ? 'active' : ''}`}
-                  onClick={() => setSelectedSpecies(null)}
+                  className={`filter-btn ${!selectedSpecies && !isRandomMode ? 'active' : ''}`}
+                  onClick={() => {
+                    setSelectedSpecies(null);
+                    setIsRandomMode(false);
+                    if (typeof window !== 'undefined') {
+                      sessionStorage.removeItem('randomMode');
+                    }
+                  }}
+                  disabled={isRandomMode}
                 >
                   All
                 </button>
                 {uniqueSpecies.map(species => (
                   <button
                     key={species}
-                    className={`filter-btn ${selectedSpecies === species ? 'active' : ''}`}
-                    onClick={() => setSelectedSpecies(species)}
+                    className={`filter-btn ${selectedSpecies === species && !isRandomMode ? 'active' : ''}`}
+                    onClick={() => {
+                      setSelectedSpecies(species);
+                      setIsRandomMode(false);
+                      if (typeof window !== 'undefined') {
+                        sessionStorage.removeItem('randomMode');
+                      }
+                    }}
+                    disabled={isRandomMode}
                   >
                     {species}
                   </button>
@@ -222,16 +303,30 @@ export default function Home() {
               </label>
               <div className="filter-buttons">
                 <button
-                  className={`filter-btn ${!selectedPersonality ? 'active' : ''}`}
-                  onClick={() => setSelectedPersonality(null)}
+                  className={`filter-btn ${!selectedPersonality && !isRandomMode ? 'active' : ''}`}
+                  onClick={() => {
+                    setSelectedPersonality(null);
+                    setIsRandomMode(false);
+                    if (typeof window !== 'undefined') {
+                      sessionStorage.removeItem('randomMode');
+                    }
+                  }}
+                  disabled={isRandomMode}
                 >
                   All
                 </button>
                 {uniquePersonalities.map(personality => (
                   <button
                     key={personality}
-                    className={`filter-btn ${selectedPersonality === personality ? 'active' : ''}`}
-                    onClick={() => setSelectedPersonality(personality)}
+                    className={`filter-btn ${selectedPersonality === personality && !isRandomMode ? 'active' : ''}`}
+                    onClick={() => {
+                      setSelectedPersonality(personality);
+                      setIsRandomMode(false);
+                      if (typeof window !== 'undefined') {
+                        sessionStorage.removeItem('randomMode');
+                      }
+                    }}
+                    disabled={isRandomMode}
                   >
                     {personality}
                   </button>
@@ -248,13 +343,34 @@ export default function Home() {
                 {uniqueGames.map(game => (
                   <button
                     key={game}
-                    className={`filter-btn ${selectedGame === game ? 'active' : ''}`}
-                    onClick={() => setSelectedGame(game)}
+                    className={`filter-btn ${selectedGame === game && !isRandomMode ? 'active' : ''}`}
+                    onClick={() => {
+                      setSelectedGame(game);
+                      setIsRandomMode(false);
+                    }}
                     title={getFullGameName(game)}
+                    disabled={isRandomMode}
                   >
                     {getFullGameName(game)}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            <div className="filter-group">
+              <label className="filter-label">
+                <span className="material-icons leaf-icon">shuffle</span>
+                Quick View
+              </label>
+              <div className="filter-buttons">
+                <button
+                  className={`filter-btn ${isRandomMode ? 'active' : ''}`}
+                  onClick={handleRandomClick}
+                  title="Show 5 random villagers"
+                >
+                  <span className="material-icons" style={{ fontSize: '16px', marginRight: '4px' }}>shuffle</span>
+                  Random 5
+                </button>
               </div>
             </div>
           </div>
@@ -272,7 +388,12 @@ export default function Home() {
               )}
             </div>
             {hasActiveFilters && (
-              <button className="clear-filters-btn" onClick={clearFilters}>
+              <button 
+                className="clear-filters-btn" 
+                onClick={clearFilters}
+                type="button"
+                style={{ cursor: 'pointer' }}
+              >
                 <span className="material-icons">clear_all</span>
                 Clear Filters
               </button>
@@ -306,7 +427,25 @@ export default function Home() {
                   </button>
                 </span>
               )}
-              {selectedGame && selectedGame !== 'NH' && (
+              {isRandomMode && (
+                <span className="filter-chip">
+                  <span className="material-icons" style={{ fontSize: '16px', marginRight: '4px' }}>shuffle</span>
+                  Random 5 Villagers
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      exitRandomMode();
+                    }} 
+                    aria-label="Exit random mode"
+                    type="button"
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <span className="material-icons">close</span>
+                  </button>
+                </span>
+              )}
+              {selectedGame && selectedGame !== 'NH' && !isRandomMode && (
                 <span className="filter-chip">
                   Game: {getFullGameName(selectedGame)}
                   <button onClick={() => setSelectedGame('NH')} aria-label="Reset to New Horizons">
@@ -333,7 +472,12 @@ export default function Home() {
                 <h2>No villagers found</h2>
                 <p>Try adjusting your search or filters</p>
                 {hasActiveFilters && (
-                  <button className="clear-filters-btn" onClick={clearFilters}>
+                  <button 
+                    className="clear-filters-btn" 
+                    onClick={clearFilters}
+                    type="button"
+                    style={{ cursor: 'pointer' }}
+                  >
                     <span className="material-icons">clear_all</span>
                     Clear All Filters
                   </button>

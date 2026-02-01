@@ -1,103 +1,110 @@
 # Animal Crossing: New Horizons - Villager Search
 
-Ứng dụng tìm kiếm và xem thông tin villagers từ Animal Crossing, được xây dựng với **Next.js** và **React**.
+A web application for searching and viewing villager information from Animal Crossing, built with **Next.js** and **React**.
 
 🌐 **Live Demo**: [GitHub Pages](https://your-username.github.io/acnh/)
 
-## Công nghệ sử dụng
+## Technologies Used
 
-- **Next.js 15** - React framework với App Router
+- **Next.js 15** - React framework with App Router
 - **React 19** - UI library
-- **JavaScript** - Ngôn ngữ lập trình
-- **CSS3** - Styling với CSS Variables và Animations
+- **JavaScript** - Programming language
+- **CSS3** - Styling with CSS Variables and Animations
 
-## Tính năng
+## Features
 
-- 🔍 Tìm kiếm villagers theo tên, loài, hoặc tính cách
-- 📋 Hiển thị danh sách villagers với thông tin chi tiết
-- 🎮 Xem các game mà villager đã xuất hiện
-- 📋 Copy tên game bằng double-click
+- 🔍 Search villagers by name, species, or personality
+- 📋 Display villager list with detailed information
+- 🎮 View games where villagers have appeared
+- 📋 Copy game name by double-clicking
 - 🌓 Dark mode / Light mode
-- 📱 Responsive design cho mobile và desktop
-- ✨ Animations và transitions mượt mà
+- 📱 Responsive design for mobile and desktop
+- ✨ Smooth animations and transitions
 
-## Cài đặt
+## Installation
 
 ```bash
-# Cài đặt dependencies
+# Install dependencies
 npm install
 
-# Chạy development server
+# Run development server
 npm run dev
 
-# Build cho production
+# Build for production
 npm run build
 
-# Chạy production server
+# Run production server
 npm start
 ```
 
-Mở [http://localhost:3000](http://localhost:3000) để xem ứng dụng.
+Open [http://localhost:3000](http://localhost:3000) to view the application.
 
-## Cấu trúc dự án
+## Project Structure
 
 ```
 ├── app/
 │   ├── layout.js          # Root layout
 │   ├── page.js            # Home page
-│   └── globals.css        # Global styles
+│   ├── globals.css        # Global styles
+│   └── icon.png           # App icon/favicon
 ├── components/
-│   ├── CopyNotification.js    # Copy notification component
-│   ├── ThemeToggle.js          # Dark mode toggle
-│   └── VillagerDetails.js      # Villager details modal
+│   ├── CopyNotification.js        # Copy notification component
+│   ├── Navigation.js              # Main navigation menu
+│   ├── ThemeProviderWrapper.js    # Theme provider wrapper
+│   ├── ThemeToggle.js             # Dark mode toggle
+│   └── VillagerDetails.js         # Villager details modal
 ├── lib/
 │   ├── api.js             # API service
-│   ├── game-mapping.js     # Game name mapping utility
+│   ├── game-mapping.js    # Game name mapping utility
 │   └── theme.js           # Theme context
-└── public/
-    └── acnh-logo.png       # Logo image
+├── public/
+│   ├── acnh-logo.png      # Logo image
+│   ├── favicon.ico        # Favicon ICO
+│   └── favicon.png        # Favicon PNG
+└── scripts/
+    └── kill-port.js       # Port cleanup utility
 ```
 
 ## Setup Environment Variables
 
-1. Copy file `env.example` thành `.env.local`:
+1. Copy `env.example` file to `.env.local`:
 ```bash
 cp env.example .env.local
 ```
 
-2. Thêm API key của bạn vào `.env.local`:
+2. Add your API key to `.env.local`:
 ```
 NEXT_PUBLIC_NOOKIPEDIA_API_KEY=your_api_key_here
 NEXT_PUBLIC_NOOKIPEDIA_API_URL=https://api.nookipedia.com
 ```
 
-Lấy API key tại: [Nookipedia API](https://api.nookipedia.com/)
+Get your API key at: [Nookipedia API](https://api.nookipedia.com/)
 
-## Deploy lên GitHub Pages
+## Deploy to GitHub Pages
 
-### Cách 1: Tự động với GitHub Actions (Khuyến nghị)
+### Method 1: Automatic with GitHub Actions (Recommended)
 
-1. Push code lên GitHub repository
-2. Vào **Settings** > **Pages** trong repository
-3. Chọn **Source**: "GitHub Actions"
-4. Thêm API key vào **Secrets**:
-   - Vào **Settings** > **Secrets and variables** > **Actions**
-   - Thêm secret mới: `NOOKIPEDIA_API_KEY` với giá trị API key của bạn
-5. Push code lên branch `main` - GitHub Actions sẽ tự động deploy
+1. Push code to GitHub repository
+2. Go to **Settings** > **Pages** in the repository
+3. Select **Source**: "GitHub Actions"
+4. Add API key to **Secrets**:
+   - Go to **Settings** > **Secrets and variables** > **Actions**
+   - Add new secret: `NOOKIPEDIA_API_KEY` with your API key value
+5. Push code to `main` branch - GitHub Actions will automatically deploy
 
-### Cách 2: Deploy thủ công
+### Method 2: Manual Deploy
 
 ```bash
 # Build static files
 npm run build
 
-# Deploy lên gh-pages branch
+# Deploy to gh-pages branch
 npx gh-pages -d out
 ```
 
 ## API
 
-Ứng dụng sử dụng [Nookipedia API](https://api.nookipedia.com/) để lấy dữ liệu villagers.
+This application uses the [Nookipedia API](https://api.nookipedia.com/) to fetch villager data.
 
 ## License
 
