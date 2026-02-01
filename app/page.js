@@ -27,6 +27,9 @@ export default function Home() {
   const [selectedVillager, setSelectedVillager] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
   const [copyNotification, setCopyNotification] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [villagerPhotos, setVillagerPhotos] = useState({}); // Cache for nh_details.photo_url
 
   useEffect(() => {
     loadVillagers();
@@ -65,9 +68,75 @@ export default function Home() {
     });
   }, [villagers]);
 
+  // Pagination calculations
+  const totalPages = useMemo(() => {
+    return Math.ceil(filteredData.length / itemsPerPage);
+  }, [filteredData.length, itemsPerPage]);
+
+  const paginatedData = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return filteredData.slice(startIndex, endIndex);
+  }, [filteredData, currentPage, itemsPerPage]);
+
+  const startItem = useMemo(() => {
+    return filteredData.length === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
+  }, [filteredData.length, currentPage, itemsPerPage]);
+
+  const endItem = useMemo(() => {
+    return Math.min(currentPage * itemsPerPage, filteredData.length);
+  }, [currentPage, itemsPerPage, filteredData.length]);
+
+  // Generate page numbers with ellipsis
+  const getPageNumbers = () => {
+    const pages = [];
+    const total = totalPages;
+    const current = currentPage;
+    
+    if (total <= 7) {
+      // Show all pages if 7 or fewer
+      for (let i = 1; i <= total; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always show first page
+      pages.push(1);
+      
+      if (current <= 4) {
+        // Near the start: 1 2 3 4 5 ... last
+        for (let i = 2; i <= 5; i++) {
+          pages.push(i);
+        }
+        pages.push('ellipsis-start');
+        pages.push(total);
+      } else if (current >= total - 3) {
+        // Near the end: 1 ... (total-4) (total-3) (total-2) (total-1) total
+        pages.push('ellipsis-start');
+        for (let i = total - 4; i <= total; i++) {
+          pages.push(i);
+        }
+      } else {
+        // In the middle: 1 ... (current-1) current (current+1) ... total
+        pages.push('ellipsis-start');
+        for (let i = current - 1; i <= current + 1; i++) {
+          pages.push(i);
+        }
+        pages.push('ellipsis-end');
+        pages.push(total);
+      }
+    }
+    
+    return pages;
+  };
+
   useEffect(() => {
     filterData();
   }, [searchKeyword, selectedSpecies, selectedPersonality, selectedGame, villagers, isRandomMode]);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchKeyword, selectedSpecies, selectedPersonality, selectedGame, isRandomMode, itemsPerPage]);
 
   // Random 5 villagers when random mode is enabled or on page load if random mode was active
   useEffect(() => {
@@ -187,9 +256,31 @@ export default function Home() {
       const details = await getVillagerDetails(villager.name);
       setSelectedVillager(details);
       setShowDetails(true);
+      
+      // Cache nh_details.photo_url if available
+      if (details.nh_details && details.nh_details.photo_url) {
+        setVillagerPhotos(prev => ({
+          ...prev,
+          [villager.name]: details.nh_details.photo_url
+        }));
+      }
     } catch (error) {
       console.error('Error loading villager details:', error);
     }
+  };
+
+  // Get image URL for villager (prefer nh_details.photo_url from cache or villager object, fallback to image_url)
+  const getVillagerImageUrl = (villager) => {
+    // Check cache first
+    if (villagerPhotos[villager.name]) {
+      return villagerPhotos[villager.name];
+    }
+    // Check if nh_details exists and has photo_url in villager object
+    if (villager.nh_details && villager.nh_details.photo_url) {
+      return villager.nh_details.photo_url;
+    }
+    // Fallback to image_url
+    return villager.image_url;
   };
 
   const copyGameName = (event, gameName) => {
@@ -211,7 +302,7 @@ export default function Home() {
       <ThemeToggle />
       <div className="acnh-header">
         <img 
-          src="/acnh-logo.png" 
+          src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/acnh-logo.png`}
           alt="Animal Crossing: New Horizons Logo" 
           className="acnh-logo floating"
         />
@@ -486,15 +577,16 @@ export default function Home() {
             )}
 
             {!loading && filteredData.length > 0 && (
-              <div className="grid-layout">
-                {filteredData.map((villager, index) => (
-              <div
-                key={`${villager.name}-${index}-${villager.species || ''}`}
-                className="villager-card animate-card"
-                onClick={() => showVillagerDetails(villager)}
-              >
+              <>
+                <div className="grid-layout">
+                  {paginatedData.map((villager, index) => (
+                    <div
+                      key={`${villager.name}-${index}-${villager.species || ''}`}
+                      className="villager-card animate-card"
+                      onClick={() => showVillagerDetails(villager)}
+                    >
                 <img
-                  src={villager.image_url}
+                  src={getVillagerImageUrl(villager)}
                   alt={villager.name}
                   className="villager-image"
                 />
@@ -536,9 +628,74 @@ export default function Home() {
                     )}
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Pagination controls */}
+                {totalPages > 1 && (
+                  <div className="pagination-controls">
+                      <button
+                        className="pagination-btn pagination-nav"
+                        onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                        disabled={currentPage === 1}
+                        aria-label="Previous page"
+                      >
+                        <span className="material-icons">chevron_left</span>
+                      </button>
+                      
+                      <div className="pagination-numbers">
+                        {getPageNumbers().map((page, index) => {
+                          if (page === 'ellipsis-start' || page === 'ellipsis-end') {
+                            return (
+                              <span key={`ellipsis-${index}`} className="pagination-ellipsis">
+                                ...
+                              </span>
+                            );
+                          }
+                          return (
+                            <button
+                              key={page}
+                              className={`pagination-number ${currentPage === page ? 'active' : ''}`}
+                              onClick={() => setCurrentPage(page)}
+                              aria-label={`Go to page ${page}`}
+                              aria-current={currentPage === page ? 'page' : undefined}
+                            >
+                              {page}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      
+                      <button
+                        className="pagination-btn pagination-nav"
+                        onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                        disabled={currentPage === totalPages}
+                        aria-label="Next page"
+                      >
+                        <span className="material-icons">chevron_right</span>
+                      </button>
+
+                      {/* Items per page selector */}
+                      <div className="items-per-page-selector">
+                        <select
+                          id="items-per-page"
+                          value={itemsPerPage}
+                          onChange={(e) => {
+                            setItemsPerPage(Number(e.target.value));
+                            setCurrentPage(1);
+                          }}
+                          className="items-per-page-select"
+                          aria-label="Items per page"
+                        >
+                          <option value={5}>5</option>
+                          <option value={10}>10</option>
+                          <option value={20}>20</option>
+                        </select>
+                      </div>
+                    </div>
+                  )}
+              </>
             )}
           </>
         )}

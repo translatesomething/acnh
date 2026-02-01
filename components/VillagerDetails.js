@@ -27,7 +27,7 @@ export default function VillagerDetails({ villager, onClose }) {
       <div className="villager-details">
         <h2>{villager.name}</h2>
         <img 
-          src={villager.image_url} 
+          src={villager.nh_details?.photo_url || villager.image_url} 
           alt={villager.name} 
           className="villager-full-image"
         />
