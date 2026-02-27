@@ -14,7 +14,6 @@ const navigationItems = [
     label: 'Critterpedia',
     icon: 'bug_report',
     description: 'Fish, Bugs & Sea Creatures',
-    comingSoon: true
   },
   {
     id: 'events',

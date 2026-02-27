@@ -7,6 +7,7 @@ import VillagerDetails from '../components/VillagerDetails';
 import CopyNotification from '../components/CopyNotification';
 import ThemeToggle from '../components/ThemeToggle';
 import Navigation from '../components/Navigation';
+import CritterpediaPage from '../components/CritterpediaPage';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('villagers');
@@ -700,13 +701,7 @@ export default function Home() {
           </>
         )}
 
-        {activeTab === 'critterpedia' && (
-          <div className="coming-soon-content">
-            <span className="material-icons coming-soon-icon">bug_report</span>
-            <h2>Critterpedia Coming Soon!</h2>
-            <p>Browse fish, bugs, and sea creatures from Animal Crossing: New Horizons</p>
-          </div>
-        )}
+        {activeTab === 'critterpedia' && <CritterpediaPage />}
 
         {activeTab === 'events' && (
           <div className="coming-soon-content">

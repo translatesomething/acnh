@@ -1,25 +1,45 @@
-# Animal Crossing: New Horizons - Villager Search
+# Animal Crossing: New Horizons Explorer
 
-A web application for searching and viewing villager information from Animal Crossing, built with **Next.js** and **React**.
+A web application for exploring Animal Crossing: New Horizons data — villagers, fish, bugs, and sea creatures — built with **Next.js** and **React**.
 
-🌐 **Live Demo**: [GitHub Pages](https://your-username.github.io/acnh/)
+🌐 **Live Demo**: [GitHub Pages](https://translatesomething.github.io/acnh/)
 
 ## Technologies Used
 
 - **Next.js 15** - React framework with App Router
 - **React 19** - UI library
-- **JavaScript** - Programming language
-- **CSS3** - Styling with CSS Variables and Animations
+- **JavaScript (ES6+)** - Programming language
+- **CSS3** - Styling with CSS Variables, Gradients, and Animations
+- **Nookipedia API** - Animal Crossing data source
 
 ## Features
 
-- 🔍 Search villagers by name, species, or personality
-- 📋 Display villager list with detailed information
-- 🎮 View games where villagers have appeared
-- 📋 Copy game name by double-clicking
-- 🌓 Dark mode / Light mode
-- 📱 Responsive design for mobile and desktop
-- ✨ Smooth animations and transitions
+### Villagers
+- Search by name, species, or personality
+- Filter by species, personality, and game appearance
+- "Random 5" mode — picks 5 random villagers each session
+- Paginated results (5 / 10 / 20 per page)
+- Detailed modal with birthday, personality, catchphrase, house info, and game appearances
+- High-quality photos via `nh_details.photo_url`
+
+### Critterpedia (Fish / Bugs / Sea Creatures)
+- Separate tabs for **Fish**, **Bugs**, and **Sea Creatures**
+- **Available Now** — filters critters catchable at the current date and time
+- Filter by **month** (Jan – Dec)
+- Filter by **hemisphere** (Northern / Southern)
+- Filter by **location** (River, Ocean, Flying, etc.)
+- Search by name
+- Grid cards showing price, location, shadow size, and availability window
+- Detailed modal with:
+  - Sell price at Nook's Cranny + special buyer (C.J. / Flick)
+  - Shadow size and movement speed (sea creatures)
+  - Visual **12-month availability chart** for both hemispheres
+  - Current month highlight in the chart
+
+### General
+- Dark mode / Light mode toggle
+- Responsive design for mobile and desktop
+- Smooth animations and gradient accents
 
 ## Installation
 
@@ -32,9 +52,6 @@ npm run dev
 
 # Build for production
 npm run build
-
-# Run production server
-npm start
 ```
 
 Open [http://localhost:3000](http://localhost:3000) to view the application.
@@ -44,67 +61,70 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 ```
 ├── app/
 │   ├── layout.js          # Root layout
-│   ├── page.js            # Home page
+│   ├── page.js            # Home page (tab routing)
 │   ├── globals.css        # Global styles
 │   └── icon.png           # App icon/favicon
 ├── components/
-│   ├── CopyNotification.js        # Copy notification component
-│   ├── Navigation.js              # Main navigation menu
-│   ├── ThemeProviderWrapper.js    # Theme provider wrapper
-│   ├── ThemeToggle.js             # Dark mode toggle
-│   └── VillagerDetails.js         # Villager details modal
+│   ├── Navigation.js          # Main navigation menu
+│   ├── VillagerDetails.js     # Villager details modal
+│   ├── CritterpediaPage.js    # Critterpedia page (Fish/Bugs/Sea)
+│   ├── CritterDetails.js      # Critter details modal
+│   ├── CopyNotification.js    # Copy-to-clipboard notification
+│   ├── ThemeProviderWrapper.js
+│   └── ThemeToggle.js
 ├── lib/
-│   ├── api.js             # API service
+│   ├── api.js             # API service (villagers + critters)
 │   ├── game-mapping.js    # Game name mapping utility
 │   └── theme.js           # Theme context
 ├── public/
-│   ├── acnh-logo.png      # Logo image
-│   ├── favicon.ico        # Favicon ICO
-│   └── favicon.png        # Favicon PNG
+│   ├── acnh-logo.png
+│   ├── favicon.ico
+│   └── favicon.png
 └── scripts/
     └── kill-port.js       # Port cleanup utility
 ```
 
-## Setup Environment Variables
+## Environment Variables
 
-1. Copy `env.example` file to `.env.local`:
+1. Copy `env.example` to `.env.local`:
 ```bash
 cp env.example .env.local
 ```
 
-2. Add your API key to `.env.local`:
+2. Fill in your API key:
 ```
 NEXT_PUBLIC_NOOKIPEDIA_API_KEY=your_api_key_here
 NEXT_PUBLIC_NOOKIPEDIA_API_URL=https://api.nookipedia.com
 ```
 
-Get your API key at: [Nookipedia API](https://api.nookipedia.com/)
+Get your free API key at: [api.nookipedia.com](https://api.nookipedia.com/)
 
 ## Deploy to GitHub Pages
 
-### Method 1: Automatic with GitHub Actions (Recommended)
+### Automatic (GitHub Actions — Recommended)
 
-1. Push code to GitHub repository
-2. Go to **Settings** > **Pages** in the repository
-3. Select **Source**: "GitHub Actions"
-4. Add API key to **Secrets**:
-   - Go to **Settings** > **Secrets and variables** > **Actions**
-   - Add new secret: `NOOKIPEDIA_API_KEY` with your API key value
-5. Push code to `main` branch - GitHub Actions will automatically deploy
+1. Push the repository to GitHub
+2. Go to **Settings** > **Pages**, set source to **GitHub Actions**
+3. Add your API key: **Settings** > **Secrets and variables** > **Actions** → new secret `NOOKIPEDIA_API_KEY`
+4. Push to `main` — the workflow deploys automatically
 
-### Method 2: Manual Deploy
+### Manual
 
 ```bash
-# Build static files
 npm run build
-
-# Deploy to gh-pages branch
 npx gh-pages -d out
 ```
 
 ## API
 
-This application uses the [Nookipedia API](https://api.nookipedia.com/) to fetch villager data.
+Powered by the [Nookipedia API](https://api.nookipedia.com/).
+
+| Endpoint | Used for |
+|---|---|
+| `GET /villagers?nhdetails=true` | Villager list with NH details |
+| `GET /nh/fish` | Fish list |
+| `GET /nh/bugs` | Bugs list |
+| `GET /nh/sea` | Sea creatures list |
 
 ## License
 
