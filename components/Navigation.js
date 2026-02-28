@@ -32,7 +32,6 @@ const navigationItems = [
     label: 'Catalog',
     icon: 'inventory_2',
     description: 'Furniture & Items',
-    comingSoon: true
   }
 ];
 

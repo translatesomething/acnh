@@ -1,6 +1,6 @@
 # Animal Crossing: New Horizons Explorer
 
-A web application for exploring Animal Crossing: New Horizons data — villagers, critters, events, and museum collections — built with **Next.js** and **React**.
+A web application for exploring Animal Crossing: New Horizons data — villagers, critters, events, museum collections, and full catalog (furniture, clothing, interior, tools, items, recipes, photos) — built with **Next.js** and **React**.
 
 🌐 **Live Demo**: [GitHub Pages](https://translatesomething.github.io/acnh/)
 
@@ -58,6 +58,38 @@ A web application for exploring Animal Crossing: New Horizons data — villagers
   - Customization details (kits, Cyrus price)
   - Collection tracker with progress bar
 
+### Catalog
+Catalog is split into seven sections with filters, detail modals, and collection tracking (localStorage). Data is cached for faster repeat loads; API timeouts show a retry option.
+
+- **Furniture** — Housewares, Miscellaneous, Wall-mounted, Ceiling decor
+  - Filter by color, series, Lucky items, Customizable
+  - Search by name; variation gallery and HHA info in detail modal
+  - Owned / Wishlist tracker
+- **Clothing** — Tops, Bottoms, Dress-up, Headwear, Accessories, Socks, Shoes, Bags, Umbrellas
+  - Filter by color, style (Active, Cool, Cute, etc.), Label themes, Villager wearable
+  - Variation gallery; styles, seasonality, and availability in detail
+  - Owned / Wishlist tracker
+- **Interior** — Wallpaper, Floors, Rugs
+  - Filter by color and series; direct image display
+  - HHA points, themes, colors, availability in detail
+  - Owned tracker
+- **Tools** — All tools (~150 items)
+  - Durability bar, buy/sell price, customization info
+  - **Compare mode** — select 2–4 tools for side-by-side comparison (durability, price, HHA)
+  - Owned tracker
+- **Items** — Misc items with auto-grouping
+  - Groups: Materials, Fences, Fruits & Edibles, Plants, Seasonal, Others
+  - Filter by season; stack size and material type in detail
+- **Recipes (DIY)** — Recipe book with materials
+  - Filter by material (Iron Nugget, Wood, etc.) and source (Balloons, Villagers, etc.)
+  - **Shopping list** — add recipes to get aggregated materials needed
+  - **Reverse lookup** — click a material in detail to filter recipes using it
+  - Learned / Shopping list trackers
+- **Photos & Posters** — Villager photos and posters
+  - Filter by type (Photos / Posters)
+  - Frame gallery (8 frame styles) in detail modal
+  - Owned tracker
+
 ### General
 - Dark mode / Light mode toggle
 - Responsive design for mobile and desktop
@@ -94,11 +126,20 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 │   ├── CritterDetails.js      # Critter details modal
 │   ├── EventsPage.js          # Events calendar and list
 │   ├── MuseumPage.js          # Museum (Art/Fossils/Gyroids)
-│   ├── CopyNotification.js    # Copy-to-clipboard notification
+│   ├── CatalogPage.js         # Catalog tab orchestrator
+│   ├── CatalogFurniture.js    # Furniture catalog + shared grid/modal/pagination
+│   ├── CatalogClothing.js     # Clothing catalog
+│   ├── CatalogInterior.js     # Interior (Wallpaper/Floors/Rugs)
+│   ├── CatalogTools.js       # Tools with comparison mode
+│   ├── CatalogItems.js       # Misc items with auto-grouping
+│   ├── CatalogRecipes.js     # DIY recipes + shopping list
+│   ├── CatalogPhotos.js      # Photos & posters
+│   ├── CopyNotification.js   # Copy-to-clipboard notification
 │   ├── ThemeProviderWrapper.js
 │   └── ThemeToggle.js
 ├── lib/
-│   ├── api.js             # API service (villagers, critters, events, museum)
+│   ├── api.js             # API (villagers, critters, events, museum, catalog endpoints)
+│   ├── catalogUtils.js    # Catalog cache, trackers, pagination, bg load
 │   ├── game-mapping.js    # Game name mapping utility
 │   └── theme.js           # Theme context
 ├── public/
@@ -155,6 +196,13 @@ Powered by the [Nookipedia API](https://api.nookipedia.com/).
 | `GET /nh/fossils/individuals` | Individual fossil pieces |
 | `GET /nh/fossils/groups` | Fossil groups with descriptions |
 | `GET /nh/gyroids` | Gyroids with variations |
+| `GET /nh/furniture` | Furniture list (by category) and item details |
+| `GET /nh/clothing` | Clothing list (by category) and item details |
+| `GET /nh/interior` | Interior (Wallpaper/Floors/Rugs) and item details |
+| `GET /nh/tools` | Tools list and item details |
+| `GET /nh/items` | Misc items list and item details |
+| `GET /nh/recipes` | DIY recipes and item details |
+| `GET /nh/photos` | Photos & posters list and item details |
 
 ## License
 

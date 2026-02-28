@@ -10,6 +10,7 @@ import Navigation from '../components/Navigation';
 import CritterpediaPage from '../components/CritterpediaPage';
 import EventsPage from '../components/EventsPage';
 import MuseumPage from '../components/MuseumPage';
+import CatalogPage from '../components/CatalogPage';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('villagers');
@@ -818,13 +819,7 @@ export default function Home() {
 
         {activeTab === 'museum' && <MuseumPage />}
 
-        {activeTab === 'catalog' && (
-          <div className="coming-soon-content">
-            <span className="material-icons coming-soon-icon">inventory_2</span>
-            <h2>Catalog Coming Soon!</h2>
-            <p>Search furniture, clothing, and items</p>
-          </div>
-        )}
+        {activeTab === 'catalog' && <CatalogPage />}
 
         {showDetails && selectedVillager && (
           <div className="modal-overlay" onClick={() => setShowDetails(false)}>
