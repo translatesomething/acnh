@@ -1,13 +1,15 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { getVillagers, getVillagerDetails } from '../lib/api';
+import { getVillagers } from '../lib/api';
 import { getFullGameName } from '../lib/game-mapping';
 import VillagerDetails from '../components/VillagerDetails';
 import CopyNotification from '../components/CopyNotification';
 import ThemeToggle from '../components/ThemeToggle';
 import Navigation from '../components/Navigation';
 import CritterpediaPage from '../components/CritterpediaPage';
+import EventsPage from '../components/EventsPage';
+import MuseumPage from '../components/MuseumPage';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('villagers');
@@ -17,7 +19,10 @@ export default function Home() {
   const [searchKeyword, setSearchKeyword] = useState('');
   const [selectedSpecies, setSelectedSpecies] = useState(null);
   const [selectedPersonality, setSelectedPersonality] = useState(null);
-  const [selectedGame, setSelectedGame] = useState('NH'); // Default to New Horizons
+  const [selectedGame, setSelectedGame] = useState('NH');
+  const [selectedGender, setSelectedGender] = useState(null);
+  const [selectedBirthdayMonth, setSelectedBirthdayMonth] = useState(null);
+  const [selectedSign, setSelectedSign] = useState(null);
   const [isRandomMode, setIsRandomMode] = useState(() => {
     // Check if random mode was active in previous session
     if (typeof window !== 'undefined') {
@@ -46,6 +51,17 @@ export default function Home() {
     const personalities = [...new Set(villagers.map(v => v.personality))].sort();
     return personalities;
   }, [villagers]);
+
+  const uniqueGenders = useMemo(() => {
+    return [...new Set(villagers.map(v => v.gender))].filter(Boolean).sort();
+  }, [villagers]);
+
+  const uniqueSigns = useMemo(() => {
+    return [...new Set(villagers.map(v => v.sign))].filter(Boolean).sort();
+  }, [villagers]);
+
+  const MONTH_NAMES = ['January','February','March','April','May','June',
+                       'July','August','September','October','November','December'];
 
   const uniqueGames = useMemo(() => {
     const games = new Set();
@@ -132,12 +148,11 @@ export default function Home() {
 
   useEffect(() => {
     filterData();
-  }, [searchKeyword, selectedSpecies, selectedPersonality, selectedGame, villagers, isRandomMode]);
+  }, [searchKeyword, selectedSpecies, selectedPersonality, selectedGame, selectedGender, selectedBirthdayMonth, selectedSign, villagers, isRandomMode]);
 
-  // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchKeyword, selectedSpecies, selectedPersonality, selectedGame, isRandomMode, itemsPerPage]);
+  }, [searchKeyword, selectedSpecies, selectedPersonality, selectedGame, selectedGender, selectedBirthdayMonth, selectedSign, isRandomMode, itemsPerPage]);
 
   // Random 5 villagers when random mode is enabled or on page load if random mode was active
   useEffect(() => {
@@ -208,12 +223,26 @@ export default function Home() {
     if (selectedGame) {
       filtered = filtered.filter(v => {
         if (!v.appearances || !Array.isArray(v.appearances)) return false;
-        // Check for both 'NH' and 'ACNH' codes for New Horizons
         if (selectedGame === 'NH') {
           return v.appearances.includes('NH') || v.appearances.includes('ACNH');
         }
         return v.appearances.includes(selectedGame);
       });
+    }
+
+    // Gender filter
+    if (selectedGender) {
+      filtered = filtered.filter(v => v.gender === selectedGender);
+    }
+
+    // Birthday month filter
+    if (selectedBirthdayMonth) {
+      filtered = filtered.filter(v => v.birthday_month === selectedBirthdayMonth);
+    }
+
+    // Zodiac sign filter
+    if (selectedSign) {
+      filtered = filtered.filter(v => v.sign === selectedSign);
     }
 
     setFilteredData(filtered);
@@ -227,7 +256,10 @@ export default function Home() {
     setSearchKeyword('');
     setSelectedSpecies(null);
     setSelectedPersonality(null);
-    setSelectedGame('NH'); // Reset to default New Horizons
+    setSelectedGame('NH');
+    setSelectedGender(null);
+    setSelectedBirthdayMonth(null);
+    setSelectedSign(null);
     setIsRandomMode(false);
     // Remove from sessionStorage
     if (typeof window !== 'undefined') {
@@ -246,28 +278,17 @@ export default function Home() {
     setSelectedSpecies(null);
     setSelectedPersonality(null);
     setSelectedGame('NH');
+    setSelectedGender(null);
+    setSelectedBirthdayMonth(null);
+    setSelectedSign(null);
   };
 
-  // Check if game filter is different from default (NH)
   const hasNonDefaultGameFilter = selectedGame && selectedGame !== 'NH';
-  const hasActiveFilters = searchKeyword || selectedSpecies || selectedPersonality || hasNonDefaultGameFilter || isRandomMode;
+  const hasActiveFilters = searchKeyword || selectedSpecies || selectedPersonality || hasNonDefaultGameFilter || selectedGender || selectedBirthdayMonth || selectedSign || isRandomMode;
 
-  const showVillagerDetails = async (villager) => {
-    try {
-      const details = await getVillagerDetails(villager.name);
-      setSelectedVillager(details);
-      setShowDetails(true);
-      
-      // Cache nh_details.photo_url if available
-      if (details.nh_details && details.nh_details.photo_url) {
-        setVillagerPhotos(prev => ({
-          ...prev,
-          [villager.name]: details.nh_details.photo_url
-        }));
-      }
-    } catch (error) {
-      console.error('Error loading villager details:', error);
-    }
+  const showVillagerDetails = (villager) => {
+    setSelectedVillager(villager);
+    setShowDetails(true);
   };
 
   // Get image URL for villager (prefer nh_details.photo_url from cache or villager object, fallback to image_url)
@@ -451,6 +472,72 @@ export default function Home() {
 
             <div className="filter-group">
               <label className="filter-label">
+                <span className="material-icons leaf-icon">person</span>
+                Gender
+              </label>
+              <div className="filter-buttons">
+                <button
+                  className={`filter-btn ${!selectedGender && !isRandomMode ? 'active' : ''}`}
+                  onClick={() => { setSelectedGender(null); exitRandomMode(); }}
+                  disabled={isRandomMode}
+                >All</button>
+                {uniqueGenders.map(g => (
+                  <button
+                    key={g}
+                    className={`filter-btn ${selectedGender === g && !isRandomMode ? 'active' : ''}`}
+                    onClick={() => { setSelectedGender(g); exitRandomMode(); }}
+                    disabled={isRandomMode}
+                  >{g}</button>
+                ))}
+              </div>
+            </div>
+
+            <div className="filter-group">
+              <label className="filter-label">
+                <span className="material-icons leaf-icon">cake</span>
+                Birthday Month
+              </label>
+              <div className="filter-buttons">
+                <button
+                  className={`filter-btn ${!selectedBirthdayMonth && !isRandomMode ? 'active' : ''}`}
+                  onClick={() => { setSelectedBirthdayMonth(null); exitRandomMode(); }}
+                  disabled={isRandomMode}
+                >All</button>
+                {MONTH_NAMES.map(m => (
+                  <button
+                    key={m}
+                    className={`filter-btn ${selectedBirthdayMonth === m && !isRandomMode ? 'active' : ''}`}
+                    onClick={() => { setSelectedBirthdayMonth(m); exitRandomMode(); }}
+                    disabled={isRandomMode}
+                  >{m.slice(0, 3)}</button>
+                ))}
+              </div>
+            </div>
+
+            <div className="filter-group">
+              <label className="filter-label">
+                <span className="material-icons leaf-icon">auto_awesome</span>
+                Zodiac Sign
+              </label>
+              <div className="filter-buttons">
+                <button
+                  className={`filter-btn ${!selectedSign && !isRandomMode ? 'active' : ''}`}
+                  onClick={() => { setSelectedSign(null); exitRandomMode(); }}
+                  disabled={isRandomMode}
+                >All</button>
+                {uniqueSigns.map(s => (
+                  <button
+                    key={s}
+                    className={`filter-btn ${selectedSign === s && !isRandomMode ? 'active' : ''}`}
+                    onClick={() => { setSelectedSign(s); exitRandomMode(); }}
+                    disabled={isRandomMode}
+                  >{s}</button>
+                ))}
+              </div>
+            </div>
+
+            <div className="filter-group">
+              <label className="filter-label">
                 <span className="material-icons leaf-icon">shuffle</span>
                 Quick View
               </label>
@@ -541,6 +628,30 @@ export default function Home() {
                 <span className="filter-chip">
                   Game: {getFullGameName(selectedGame)}
                   <button onClick={() => setSelectedGame('NH')} aria-label="Reset to New Horizons">
+                    <span className="material-icons">close</span>
+                  </button>
+                </span>
+              )}
+              {selectedGender && (
+                <span className="filter-chip">
+                  Gender: {selectedGender}
+                  <button onClick={() => setSelectedGender(null)} aria-label="Remove gender filter">
+                    <span className="material-icons">close</span>
+                  </button>
+                </span>
+              )}
+              {selectedBirthdayMonth && (
+                <span className="filter-chip">
+                  Birthday: {selectedBirthdayMonth}
+                  <button onClick={() => setSelectedBirthdayMonth(null)} aria-label="Remove birthday filter">
+                    <span className="material-icons">close</span>
+                  </button>
+                </span>
+              )}
+              {selectedSign && (
+                <span className="filter-chip">
+                  Sign: {selectedSign}
+                  <button onClick={() => setSelectedSign(null)} aria-label="Remove sign filter">
                     <span className="material-icons">close</span>
                   </button>
                 </span>
@@ -703,21 +814,9 @@ export default function Home() {
 
         {activeTab === 'critterpedia' && <CritterpediaPage />}
 
-        {activeTab === 'events' && (
-          <div className="coming-soon-content">
-            <span className="material-icons coming-soon-icon">event</span>
-            <h2>Events Calendar Coming Soon!</h2>
-            <p>View special events, birthdays, and seasonal activities</p>
-          </div>
-        )}
+        {activeTab === 'events' && <EventsPage />}
 
-        {activeTab === 'museum' && (
-          <div className="coming-soon-content">
-            <span className="material-icons coming-soon-icon">museum</span>
-            <h2>Museum Collection Coming Soon!</h2>
-            <p>Browse artwork, fossils, and gyroids</p>
-          </div>
-        )}
+        {activeTab === 'museum' && <MuseumPage />}
 
         {activeTab === 'catalog' && (
           <div className="coming-soon-content">

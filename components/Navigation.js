@@ -20,14 +20,12 @@ const navigationItems = [
     label: 'Events',
     icon: 'event',
     description: 'Calendar & Special Events',
-    comingSoon: true
   },
   {
     id: 'museum',
     label: 'Museum',
     icon: 'museum',
     description: 'Art, Fossils & Gyroids',
-    comingSoon: true
   },
   {
     id: 'catalog',

@@ -1,6 +1,6 @@
 # Animal Crossing: New Horizons Explorer
 
-A web application for exploring Animal Crossing: New Horizons data — villagers, fish, bugs, and sea creatures — built with **Next.js** and **React**.
+A web application for exploring Animal Crossing: New Horizons data — villagers, critters, events, and museum collections — built with **Next.js** and **React**.
 
 🌐 **Live Demo**: [GitHub Pages](https://translatesomething.github.io/acnh/)
 
@@ -16,30 +16,53 @@ A web application for exploring Animal Crossing: New Horizons data — villagers
 
 ### Villagers
 - Search by name, species, or personality
-- Filter by species, personality, and game appearance
+- Filter by species, personality, game appearance, gender, birthday month, and zodiac sign
 - "Random 5" mode — picks 5 random villagers each session
 - Paginated results (5 / 10 / 20 per page)
-- Detailed modal with birthday, personality, catchphrase, house info, and game appearances
+- Detailed modal with tabbed layout (Overview, NH Details, House)
 - High-quality photos via `nh_details.photo_url`
 
 ### Critterpedia (Fish / Bugs / Sea Creatures)
 - Separate tabs for **Fish**, **Bugs**, and **Sea Creatures**
 - **Available Now** — filters critters catchable at the current date and time
-- Filter by **month** (Jan – Dec)
-- Filter by **hemisphere** (Northern / Southern)
-- Filter by **location** (River, Ocean, Flying, etc.)
+- **Time Travel** — simulate any hour to check availability
+- Filter by **month**, **hemisphere**, and **location**
 - Search by name
-- Grid cards showing price, location, shadow size, and availability window
-- Detailed modal with:
-  - Sell price at Nook's Cranny + special buyer (C.J. / Flick)
-  - Shadow size and movement speed (sea creatures)
-  - Visual **12-month availability chart** for both hemispheres
-  - Current month highlight in the chart
+- Collection tracker with **caught** / **donated** status (persisted in localStorage)
+- Progress bars for caught and donated counts
+- Detailed modal with pricing, 12-month availability chart, museum phrase, and catch phrase
+
+### Events
+- **Today's Events** banner highlighting current events
+- **Calendar view** with monthly grid and event dots
+- **List view** with search and sorting
+- Filter by event type (Birthday, Event, Nook Shopping, Recipes, Season, Shopping season)
+- Click any calendar day to see all events in a popup
+- Event detail modal with Nookipedia wiki links
+
+### Museum (Art, Fossils, Gyroids)
+- **Artwork** — browse all 43 paintings and statues
+  - Filter by type (Painting / Statue) and forgery status
+  - Real vs Fake comparison with side-by-side images
+  - Authenticity tips to spot forgeries
+  - Full texture views for detailed inspection
+  - Donation tracker with progress bar
+- **Fossils** — 73 individual fossils across 35 groups
+  - Group view showing completion progress per skeleton
+  - Individual view with grid layout
+  - Per-piece donation tracker with group-level progress bars
+  - Fossil group details with Blathers' museum descriptions
+- **Gyroids** — 36 gyroids with all variations
+  - Filter by sound type (Drum set, Melody, Kick, Snare, etc.)
+  - Variation gallery showing all color options
+  - Customization details (kits, Cyrus price)
+  - Collection tracker with progress bar
 
 ### General
 - Dark mode / Light mode toggle
 - Responsive design for mobile and desktop
 - Smooth animations and gradient accents
+- Persistent collection tracking via localStorage
 
 ## Installation
 
@@ -69,11 +92,13 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 │   ├── VillagerDetails.js     # Villager details modal
 │   ├── CritterpediaPage.js    # Critterpedia page (Fish/Bugs/Sea)
 │   ├── CritterDetails.js      # Critter details modal
+│   ├── EventsPage.js          # Events calendar and list
+│   ├── MuseumPage.js          # Museum (Art/Fossils/Gyroids)
 │   ├── CopyNotification.js    # Copy-to-clipboard notification
 │   ├── ThemeProviderWrapper.js
 │   └── ThemeToggle.js
 ├── lib/
-│   ├── api.js             # API service (villagers + critters)
+│   ├── api.js             # API service (villagers, critters, events, museum)
 │   ├── game-mapping.js    # Game name mapping utility
 │   └── theme.js           # Theme context
 ├── public/
@@ -125,6 +150,11 @@ Powered by the [Nookipedia API](https://api.nookipedia.com/).
 | `GET /nh/fish` | Fish list |
 | `GET /nh/bugs` | Bugs list |
 | `GET /nh/sea` | Sea creatures list |
+| `GET /nh/events` | Events and calendar data |
+| `GET /nh/art` | Artwork (paintings & statues) |
+| `GET /nh/fossils/individuals` | Individual fossil pieces |
+| `GET /nh/fossils/groups` | Fossil groups with descriptions |
+| `GET /nh/gyroids` | Gyroids with variations |
 
 ## License
 
