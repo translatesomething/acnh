@@ -218,6 +218,9 @@ export default function EventsPage() {
           <span className="material-icons empty-icon">error_outline</span>
           <h2>Failed to load</h2>
           <p>{error}</p>
+          <button className="clear-filters-btn" onClick={loadEvents} type="button" style={{ cursor: 'pointer', marginTop: 12 }}>
+            <span className="material-icons">refresh</span> Retry
+          </button>
         </div>
       )}
 

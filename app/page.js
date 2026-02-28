@@ -1,16 +1,42 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { getVillagers } from '../lib/api';
 import { getFullGameName } from '../lib/game-mapping';
 import VillagerDetails from '../components/VillagerDetails';
 import CopyNotification from '../components/CopyNotification';
 import ThemeToggle from '../components/ThemeToggle';
 import Navigation from '../components/Navigation';
-import CritterpediaPage from '../components/CritterpediaPage';
 import EventsPage from '../components/EventsPage';
 import MuseumPage from '../components/MuseumPage';
-import CatalogPage from '../components/CatalogPage';
+
+// Lazy load heavy tabs so Villagers and first paint stay fast
+const CritterpediaPage = dynamic(
+  () => import('../components/CritterpediaPage'),
+  {
+    loading: () => (
+      <div className="loading-spinner">
+        <div className="spinner"></div>
+        <p style={{ marginTop: 12, fontSize: 14, color: 'var(--text-muted)' }}>Loading Critterpedia...</p>
+      </div>
+    ),
+    ssr: false,
+  }
+);
+
+const CatalogPage = dynamic(
+  () => import('../components/CatalogPage'),
+  {
+    loading: () => (
+      <div className="loading-spinner">
+        <div className="spinner"></div>
+        <p style={{ marginTop: 12, fontSize: 14, color: 'var(--text-muted)' }}>Loading catalog...</p>
+      </div>
+    ),
+    ssr: false,
+  }
+);
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('villagers');
@@ -37,6 +63,7 @@ export default function Home() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [villagerPhotos, setVillagerPhotos] = useState({}); // Cache for nh_details.photo_url
+  const [villagerError, setVillagerError] = useState(null);
 
   useEffect(() => {
     loadVillagers();
@@ -163,6 +190,7 @@ export default function Home() {
   }, [isRandomMode, villagers]);
 
   const loadVillagers = async () => {
+    setVillagerError(null);
     try {
       setLoading(true);
       const data = await getVillagers();
@@ -170,6 +198,7 @@ export default function Home() {
       setFilteredData(data);
     } catch (error) {
       console.error('Error loading villagers:', error);
+      setVillagerError(error?.message || 'Failed to load villagers. Check connection or API key.');
     } finally {
       setLoading(false);
     }
@@ -670,7 +699,18 @@ export default function Home() {
 
         {activeTab === 'villagers' && (
           <>
-            {!loading && filteredData.length === 0 && (
+            {!loading && villagerError && (
+              <div className="empty-state">
+                <span className="material-icons empty-icon">error_outline</span>
+                <h2>Failed to load</h2>
+                <p>{villagerError}</p>
+                <button className="clear-filters-btn" onClick={loadVillagers} type="button" style={{ cursor: 'pointer', marginTop: 12 }}>
+                  <span className="material-icons">refresh</span> Retry
+                </button>
+              </div>
+            )}
+
+            {!loading && !villagerError && filteredData.length === 0 && (
               <div className="empty-state">
                 <span className="material-icons empty-icon">search_off</span>
                 <h2>No villagers found</h2>
@@ -689,7 +729,7 @@ export default function Home() {
               </div>
             )}
 
-            {!loading && filteredData.length > 0 && (
+            {!loading && !villagerError && filteredData.length > 0 && (
               <>
                 <div className="grid-layout">
                   {paginatedData.map((villager, index) => (

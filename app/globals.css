@@ -3220,6 +3220,7 @@ h3 {
    ══════════════════════════════════════════════════════════════════════════════ */
 
 .ct-page { max-width: 1200px; margin: 0 auto; }
+.ct-tab-panel[hidden] { display: none !important; }
 
 /* Category tabs */
 .ct-cat-tabs {

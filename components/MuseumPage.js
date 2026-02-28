@@ -27,6 +27,7 @@ export default function MuseumPage() {
   // Art state
   const [artData, setArtData] = useState([]);
   const [artLoading, setArtLoading] = useState(false);
+  const [artError, setArtError] = useState(null);
   const [artSearch, setArtSearch] = useState('');
   const [artTypeFilter, setArtTypeFilter] = useState('all');
   const [artFakeFilter, setArtFakeFilter] = useState('all');
@@ -36,6 +37,7 @@ export default function MuseumPage() {
   // Fossils state
   const [fossilData, setFossilData] = useState({ individuals: [], groups: [] });
   const [fossilLoading, setFossilLoading] = useState(false);
+  const [fossilError, setFossilError] = useState(null);
   const [fossilSearch, setFossilSearch] = useState('');
   const [fossilViewMode, setFossilViewMode] = useState('groups');
   const [fossilDonated, setFossilDonated] = useState(() => loadSet('museum_fossil_donated'));
@@ -44,6 +46,7 @@ export default function MuseumPage() {
   // Gyroids state
   const [gyroidData, setGyroidData] = useState([]);
   const [gyroidLoading, setGyroidLoading] = useState(false);
+  const [gyroidError, setGyroidError] = useState(null);
   const [gyroidSearch, setGyroidSearch] = useState('');
   const [gyroidSoundFilter, setGyroidSoundFilter] = useState('all');
   const [gyroidCollected, setGyroidCollected] = useState(() => loadSet('museum_gyroid_collected'));
@@ -56,27 +59,33 @@ export default function MuseumPage() {
   useEffect(() => { setCurrentPage(1); }, [tab, artSearch, artTypeFilter, artFakeFilter, fossilSearch, fossilViewMode, gyroidSearch, gyroidSoundFilter]);
 
   // Fetch art
+  const loadArt = () => {
+    setArtError(null);
+    setArtLoading(true);
+    getArt().then(d => setArtData(Array.isArray(d) ? d : [])).catch(e => setArtError(e?.message || 'Failed to load art.')).finally(() => setArtLoading(false));
+  };
   useEffect(() => {
-    if (tab === 'art' && artData.length === 0) {
-      setArtLoading(true);
-      getArt().then(d => setArtData(d)).catch(console.error).finally(() => setArtLoading(false));
-    }
+    if (tab === 'art' && artData.length === 0 && !artLoading) loadArt();
   }, [tab]);
 
   // Fetch fossils
+  const loadFossils = () => {
+    setFossilError(null);
+    setFossilLoading(true);
+    getFossils().then(d => setFossilData(d || { individuals: [], groups: [] })).catch(e => setFossilError(e?.message || 'Failed to load fossils.')).finally(() => setFossilLoading(false));
+  };
   useEffect(() => {
-    if (tab === 'fossils' && fossilData.individuals.length === 0) {
-      setFossilLoading(true);
-      getFossils().then(d => setFossilData(d)).catch(console.error).finally(() => setFossilLoading(false));
-    }
+    if (tab === 'fossils' && fossilData.individuals.length === 0 && !fossilLoading) loadFossils();
   }, [tab]);
 
   // Fetch gyroids
+  const loadGyroids = () => {
+    setGyroidError(null);
+    setGyroidLoading(true);
+    getGyroids().then(d => setGyroidData(Array.isArray(d) ? d : [])).catch(e => setGyroidError(e?.message || 'Failed to load gyroids.')).finally(() => setGyroidLoading(false));
+  };
   useEffect(() => {
-    if (tab === 'gyroids' && gyroidData.length === 0) {
-      setGyroidLoading(true);
-      getGyroids().then(d => setGyroidData(d)).catch(console.error).finally(() => setGyroidLoading(false));
-    }
+    if (tab === 'gyroids' && gyroidData.length === 0 && !gyroidLoading) loadGyroids();
   }, [tab]);
 
   // ─── Art logic ─────────────────────────────────────────
@@ -297,6 +306,15 @@ export default function MuseumPage() {
 
           {artLoading ? (
             <div className="loading-spinner"><div className="spinner"></div></div>
+          ) : artError ? (
+            <div className="empty-state">
+              <span className="material-icons empty-icon">error_outline</span>
+              <h2>Failed to load</h2>
+              <p>{artError}</p>
+              <button className="clear-filters-btn" onClick={loadArt} type="button" style={{ cursor: 'pointer', marginTop: 12 }}>
+                <span className="material-icons">refresh</span> Retry
+              </button>
+            </div>
           ) : (
             <>
               <div className="mu-grid mu-grid--art">
@@ -442,6 +460,15 @@ export default function MuseumPage() {
 
           {fossilLoading ? (
             <div className="loading-spinner"><div className="spinner"></div></div>
+          ) : fossilError ? (
+            <div className="empty-state">
+              <span className="material-icons empty-icon">error_outline</span>
+              <h2>Failed to load</h2>
+              <p>{fossilError}</p>
+              <button className="clear-filters-btn" onClick={loadFossils} type="button" style={{ cursor: 'pointer', marginTop: 12 }}>
+                <span className="material-icons">refresh</span> Retry
+              </button>
+            </div>
           ) : fossilViewMode === 'groups' ? (
             <div className="mu-fossil-groups">
               {filteredFossilGroups.map(groupName => {
@@ -587,6 +614,15 @@ export default function MuseumPage() {
 
           {gyroidLoading ? (
             <div className="loading-spinner"><div className="spinner"></div></div>
+          ) : gyroidError ? (
+            <div className="empty-state">
+              <span className="material-icons empty-icon">error_outline</span>
+              <h2>Failed to load</h2>
+              <p>{gyroidError}</p>
+              <button className="clear-filters-btn" onClick={loadGyroids} type="button" style={{ cursor: 'pointer', marginTop: 12 }}>
+                <span className="material-icons">refresh</span> Retry
+              </button>
+            </div>
           ) : (
             <>
               <div className="mu-grid mu-grid--gyroid">

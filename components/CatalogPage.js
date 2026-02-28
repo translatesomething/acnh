@@ -1,13 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import CatalogFurniture from './CatalogFurniture';
-import CatalogClothing from './CatalogClothing';
-import CatalogInterior from './CatalogInterior';
-import CatalogTools from './CatalogTools';
-import CatalogItems from './CatalogItems';
-import CatalogRecipes from './CatalogRecipes';
-import CatalogPhotos from './CatalogPhotos';
+import { useState, useCallback } from 'react';
+import dynamic from 'next/dynamic';
 
 const TABS = [
   { id: 'furniture', label: 'Furniture', icon: 'weekend' },
@@ -19,19 +13,35 @@ const TABS = [
   { id: 'photos', label: 'Photos', icon: 'photo_library' },
 ];
 
+// Lazy load each catalog section so only the active tab's code loads first
+function TabLoading() {
+  return (
+    <div className="loading-spinner" style={{ minHeight: 200 }}>
+      <div className="spinner"></div>
+      <p style={{ marginTop: 12, fontSize: 13, color: 'var(--text-muted)' }}>Loading...</p>
+    </div>
+  );
+}
+
 const COMPONENTS = {
-  furniture: CatalogFurniture,
-  clothing: CatalogClothing,
-  interior: CatalogInterior,
-  tools: CatalogTools,
-  items: CatalogItems,
-  recipes: CatalogRecipes,
-  photos: CatalogPhotos,
+  furniture: dynamic(() => import('./CatalogFurniture'), { loading: TabLoading, ssr: false }),
+  clothing: dynamic(() => import('./CatalogClothing'), { loading: TabLoading, ssr: false }),
+  interior: dynamic(() => import('./CatalogInterior'), { loading: TabLoading, ssr: false }),
+  tools: dynamic(() => import('./CatalogTools'), { loading: TabLoading, ssr: false }),
+  items: dynamic(() => import('./CatalogItems'), { loading: TabLoading, ssr: false }),
+  recipes: dynamic(() => import('./CatalogRecipes'), { loading: TabLoading, ssr: false }),
+  photos: dynamic(() => import('./CatalogPhotos'), { loading: TabLoading, ssr: false }),
 };
 
 export default function CatalogPage() {
   const [activeTab, setActiveTab] = useState('furniture');
-  const ActiveComponent = COMPONENTS[activeTab];
+  // Keep tabs mounted once visited so data is not re-fetched when switching back
+  const [visitedTabs, setVisitedTabs] = useState(() => new Set(['furniture']));
+
+  const handleTabChange = useCallback((id) => {
+    setActiveTab(id);
+    setVisitedTabs((prev) => new Set([...prev, id]));
+  }, []);
 
   return (
     <div className="ct-page">
@@ -40,14 +50,27 @@ export default function CatalogPage() {
           <button
             key={tab.id}
             className={`ct-main-tab ${activeTab === tab.id ? 'active' : ''}`}
-            onClick={() => setActiveTab(tab.id)}
+            onClick={() => handleTabChange(tab.id)}
           >
             <span className="material-icons" style={{ fontSize: 20 }}>{tab.icon}</span>
             <span className="ct-main-tab-label">{tab.label}</span>
           </button>
         ))}
       </div>
-      <ActiveComponent />
+      {TABS.map(tab => {
+        if (!visitedTabs.has(tab.id)) return null;
+        const Component = COMPONENTS[tab.id];
+        return (
+          <div
+            key={tab.id}
+            className="ct-tab-panel"
+            hidden={activeTab !== tab.id}
+            aria-hidden={activeTab !== tab.id}
+          >
+            <Component />
+          </div>
+        );
+      })}
     </div>
   );
 }
