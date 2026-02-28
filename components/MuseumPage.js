@@ -219,7 +219,7 @@ export default function MuseumPage() {
       } else {
         pages.push('...');
         for (let i = current - 1; i <= current + 1; i++) pages.push(i);
-        pages.push('..x');
+        pages.push('...');
         pages.push(total);
       }
     }

@@ -39,3 +39,5 @@ next-env.d.ts
 
 # Local documentation / notes (not for git)
 API_FEATURES.md
+CODE_REVIEW_ISSUES.md
+ADVANCED_FEATURES_BRAINSTORM.md

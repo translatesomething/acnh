@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import { getVillagers } from '../lib/api';
 import { getFullGameName } from '../lib/game-mapping';
@@ -64,9 +64,12 @@ export default function Home() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [villagerPhotos, setVillagerPhotos] = useState({}); // Cache for nh_details.photo_url
   const [villagerError, setVillagerError] = useState(null);
+  const isMountedRef = useRef(true);
 
   useEffect(() => {
+    isMountedRef.current = true;
     loadVillagers();
+    return () => { isMountedRef.current = false; };
   }, []);
 
   // Get unique species and personalities for filters
@@ -194,13 +197,15 @@ export default function Home() {
     try {
       setLoading(true);
       const data = await getVillagers();
+      if (!isMountedRef.current) return;
       setVillagers(data);
       setFilteredData(data);
     } catch (error) {
+      if (!isMountedRef.current) return;
       console.error('Error loading villagers:', error);
       setVillagerError(error?.message || 'Failed to load villagers. Check connection or API key.');
     } finally {
-      setLoading(false);
+      if (isMountedRef.current) setLoading(false);
     }
   };
 
@@ -344,7 +349,7 @@ export default function Home() {
   };
 
   const getRemainingGames = (appearances) => {
-    return appearances.slice(3)
+    return (appearances ?? []).slice(3)
       .map(game => getFullGameName(game))
       .join('\n');
   };
@@ -761,7 +766,7 @@ export default function Home() {
                 </div>
                 <div className="game-appearances">
                   <div className="game-chips">
-                    {villager.appearances.slice(0, 3).map((game, idx) => (
+                    {(villager.appearances ?? []).slice(0, 3).map((game, idx) => (
                       <div
                         key={`${villager.name}-game-${idx}-${game}`}
                         className="game-chip"
@@ -771,12 +776,12 @@ export default function Home() {
                         <span className="game-name">{getFullGameName(game)}</span>
                       </div>
                     ))}
-                    {villager.appearances.length > 3 && (
+                    {(villager.appearances?.length ?? 0) > 3 && (
                       <div
                         className="game-chip"
                         title={getRemainingGames(villager.appearances)}
                       >
-                        +{villager.appearances.length - 3} more
+                        +{(villager.appearances?.length ?? 0) - 3} more
                       </div>
                     )}
                   </div>

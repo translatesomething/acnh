@@ -8,10 +8,10 @@ export const metadata = {
   description: 'Animal Crossing Villager Search',
   icons: {
     icon: [
-      { url: '/favicon.png', type: 'image/png' },
-      { url: '/favicon.ico', type: 'image/x-icon' }
+      { url: `${basePath}/favicon.png`, type: 'image/png' },
+      { url: `${basePath}/favicon.ico`, type: 'image/x-icon' }
     ],
-    apple: '/acnh-logo.png',
+    apple: `${basePath}/acnh-logo.png`,
   },
 }
 

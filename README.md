@@ -167,6 +167,8 @@ NEXT_PUBLIC_NOOKIPEDIA_API_URL=https://api.nookipedia.com
 
 Get your free API key at: [api.nookipedia.com](https://api.nookipedia.com/)
 
+**Note:** With static export (GitHub Pages) the key is in the client bundle. To keep it server-side, you would need to deploy to a Node host and add a proxy that forwards requests with a server-held key (this repo uses `output: 'export'`, so API routes are not available in the same build).
+
 ## Deploy to GitHub Pages
 
 ### Automatic (GitHub Actions — Recommended)
