@@ -95,7 +95,7 @@ Catalog is split into seven sections with filters, detail modals, and collection
 - Responsive design for mobile and desktop
 - Smooth animations and gradient accents
 - Persistent collection tracking via localStorage
-- **Performance**: Critterpedia and Catalog load on demand (lazy); Catalog sub-tabs (Furniture, Clothing, etc.) each load when first opened
+- **Performance**: Critterpedia and Catalog load on demand (lazy); Catalog sub-tabs (Furniture, Clothing, etc.) each load when first opened; only the active Catalog tab is kept in memory (switching tabs unmounts the previous one to reduce RAM use)
 - **Reliability**: API requests use timeouts; failed or timed-out requests show an error message and **Retry** button (Villagers, Critterpedia, Events, Museum, Catalog)
 
 ## Installation

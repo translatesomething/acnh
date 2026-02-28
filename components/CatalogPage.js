@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import dynamic from 'next/dynamic';
 
 const TABS = [
@@ -35,13 +35,10 @@ const COMPONENTS = {
 
 export default function CatalogPage() {
   const [activeTab, setActiveTab] = useState('furniture');
-  // Keep tabs mounted once visited so data is not re-fetched when switching back
-  const [visitedTabs, setVisitedTabs] = useState(() => new Set(['furniture']));
 
-  const handleTabChange = useCallback((id) => {
-    setActiveTab(id);
-    setVisitedTabs((prev) => new Set([...prev, id]));
-  }, []);
+  // Only mount the active tab so we don't keep 7 chunks + 7 component trees in memory.
+  // When switching back, chunk loads from browser cache; data from API/localStorage cache.
+  const Component = COMPONENTS[activeTab];
 
   return (
     <div className="ct-page">
@@ -50,27 +47,16 @@ export default function CatalogPage() {
           <button
             key={tab.id}
             className={`ct-main-tab ${activeTab === tab.id ? 'active' : ''}`}
-            onClick={() => handleTabChange(tab.id)}
+            onClick={() => setActiveTab(tab.id)}
           >
             <span className="material-icons" style={{ fontSize: 20 }}>{tab.icon}</span>
             <span className="ct-main-tab-label">{tab.label}</span>
           </button>
         ))}
       </div>
-      {TABS.map(tab => {
-        if (!visitedTabs.has(tab.id)) return null;
-        const Component = COMPONENTS[tab.id];
-        return (
-          <div
-            key={tab.id}
-            className="ct-tab-panel"
-            hidden={activeTab !== tab.id}
-            aria-hidden={activeTab !== tab.id}
-          >
-            <Component />
-          </div>
-        );
-      })}
+      <div className="ct-tab-panel">
+        <Component />
+      </div>
     </div>
   );
 }
