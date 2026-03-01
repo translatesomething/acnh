@@ -106,11 +106,22 @@ export default function CritterpediaPage() {
 
   // ── Data loading ─────────────────────────────────────────────────────────
   useEffect(() => {
-    loadData(critterType);
+    let cancelled = false;
     setSearchKeyword('');
     setSelectedLocation(null);
     setSelectedMonth(null);
     setSimulateHour(null);
+    setLoading(true);
+    setError(null);
+    setData([]);
+    getCritters(critterType)
+      .then(result => {
+        if (cancelled) return;
+        setData(Array.isArray(result) ? result : []);
+      })
+      .catch(() => { if (!cancelled) setError('Failed to load data. Please check your API key.'); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [critterType]);
 
   const loadData = async (type) => {

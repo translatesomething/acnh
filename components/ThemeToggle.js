@@ -5,7 +5,7 @@ import { useTheme } from '../lib/theme';
 export default function ThemeToggle() {
   const { theme, toggleTheme, mounted } = useTheme();
 
-  // Không render gì nếu chưa mounted để tránh hydration mismatch
+  // Don't render until mounted to avoid hydration mismatch
   if (!mounted) {
     return null;
   }

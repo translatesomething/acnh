@@ -7,13 +7,16 @@ const nextConfig = {
   reactStrictMode: true,
   output: 'export', // Enable static export for GitHub Pages
   images: {
-    domains: ['dodo.ac', 'nookipedia.com'],
-    unoptimized: true
+    remotePatterns: [
+      { protocol: 'https', hostname: 'dodo.ac', pathname: '/**' },
+      { protocol: 'https', hostname: 'nookipedia.com', pathname: '/**' },
+    ],
+    unoptimized: true,
   },
-  // Base path for GitHub Pages (sử dụng tên repo hoặc để trống nếu dùng custom domain)
+  // Base path for GitHub Pages (use repo name or leave empty for custom domain)
   basePath: basePath,
   assetPrefix: basePath,
-  trailingSlash: true, // Cần cho GitHub Pages
+  trailingSlash: true, // Required for GitHub Pages
   env: {
     NEXT_PUBLIC_BASE_PATH: basePath,
   },

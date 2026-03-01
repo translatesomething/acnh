@@ -2,15 +2,18 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { getRecipeNames, getRecipeBatch, getRecipesByMaterial } from '../lib/api';
-import { loadSet, saveSet, loadCache, saveCache, clearCache, getBuyPrice, bgLoad } from '../lib/catalogUtils';
-import { Pagination, DetailModal, DetailActions, ErrorRetry } from './CatalogFurniture';
+import { loadSet, saveSet, loadCache, saveCache, clearCache, getBuyPrice, formatApiErrorMessage } from '../lib/catalogUtils';
+import { Pagination, DetailModal, DetailActions, ErrorRetry, SlowLoadingMessage } from './CatalogFurniture';
 
-const COMMON_MATERIALS = ['Iron Nugget', 'Wood', 'Softwood', 'Hardwood', 'Stone', 'Clay', 'Gold Nugget', 'Star Fragment', 'Bamboo Piece', 'Tree Branch', 'Weeds'];
+const COMMON_MATERIALS = ['Iron Nugget', 'Wood', 'Softwood', 'Hardwood', 'Stone', 'Clay', 'Gold Nugget', 'Star Fragment', 'Bamboo Piece', 'Tree Branch'];
+const PER_PAGE = 20;
 
 export default function CatalogRecipes() {
   const [allNames, setAllNames] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [cache, setCache] = useState({});
+  const [cache, setCache] = useState(() => loadCache('recipe', 'all'));
+  const [namesLoading, setNamesLoading] = useState(true);
+  const [pageDetailsLoading, setPageDetailsLoading] = useState(false);
+  const [materialList, setMaterialList] = useState(null);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [materialFilter, setMaterialFilter] = useState(null);
@@ -18,61 +21,92 @@ export default function CatalogRecipes() {
   const [learned, setLearned] = useState(() => loadSet('ct_recipe_learned'));
   const [selected, setSelected] = useState(null);
   const [page, setPage] = useState(1);
-  const [bgProg, setBgProg] = useState({ loaded: 0, total: 0, active: false });
   const [refreshKey, setRefreshKey] = useState(0);
   const [shoppingList, setShoppingList] = useState(() => loadSet('ct_recipe_shop'));
   const [showShoppingPanel, setShowShoppingPanel] = useState(false);
-  const PER_PAGE = 20;
-  const abortRef = useRef(null);
+  const loadingPageRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
-    abortRef.current?.abort();
-    setLoading(true); setError(null); setAllNames([]); setPage(1);
-    setBgProg({ loaded: 0, total: 0, active: false });
-    const cached = loadCache('recipe', 'all');
-    setCache(cached);
-    const cachedNames = Object.keys(cached);
-    if (cachedNames.length > 0) { setAllNames(cachedNames); setLoading(false); }
+    setError(null); setMaterialList(null);
+    if (materialFilter) {
+      setNamesLoading(true);
+      getRecipesByMaterial(materialFilter).then(data => {
+        if (cancelled) return;
+        const list = Array.isArray(data) ? data : [];
+        setMaterialList(list);
+        setNamesLoading(false);
+      }).catch(e => { if (!cancelled) { setNamesLoading(false); setError(formatApiErrorMessage(e)); } });
+    } else {
+      const cached = loadCache('recipe', 'all');
+      const cachedNames = Object.keys(cached);
+      if (cachedNames.length > 0) {
+        setAllNames(cachedNames);
+        setNamesLoading(false);
+      } else {
+        setNamesLoading(true);
+      }
+      getRecipeNames().then(names => {
+        if (cancelled) return;
+        setAllNames(Array.isArray(names) ? names : []);
+        setNamesLoading(false);
+      }).catch(e => { if (!cancelled) { setNamesLoading(false); setError(formatApiErrorMessage(e)); } });
+    }
+    return () => { cancelled = true; };
+  }, [refreshKey, materialFilter]);
 
-    getRecipeNames().then(names => {
-      if (cancelled) return;
-      setAllNames(names); setLoading(false);
-      if (Object.keys(cached).length >= names.length) return;
-      const controller = new AbortController(); abortRef.current = controller;
-      setBgProg({ loaded: Object.keys(cached).length, total: names.length, active: true });
-      bgLoad({ names, cached, batchFn: getRecipeBatch, controller,
-        onProgress: acc => { setCache({ ...acc }); setBgProg({ loaded: Object.keys(acc).length, total: names.length, active: true }); },
-        onDone: acc => { saveCache('recipe', 'all', acc); setCache({ ...acc }); setBgProg(p => ({ ...p, active: false })); }
-      });
-    }).catch(e => { if (!cancelled) { setLoading(false); if (cachedNames.length === 0) setError(e.name === 'AbortError' ? 'API timed out.' : 'Failed to load.'); } });
+  const listFromMaterial = useMemo(() => {
+    if (!materialList?.length) return { names: [], byName: {} };
+    const byName = {};
+    materialList.forEach(r => { if (r?.name) byName[r.name] = r; });
+    return { names: materialList.map(r => r.name), byName };
+  }, [materialList]);
 
-    return () => { cancelled = true; abortRef.current?.abort(); };
-  }, [refreshKey]);
+  // Source filter uses cache only (no full-list fetch): show only loaded recipes that have this source
+  const namesBySource = useMemo(() => {
+    if (!sourceFilter) return null;
+    return Object.keys(cache).filter(name => (cache[name]?.availability || []).some(a => a.from === sourceFilter));
+  }, [cache, sourceFilter]);
+
+  const baseNames = materialFilter
+    ? listFromMaterial.names
+    : sourceFilter
+      ? (namesBySource || [])
+      : allNames;
+  const filtered = useMemo(() => {
+    let list = [...baseNames];
+    if (search.trim()) { const kw = search.toLowerCase(); list = list.filter(n => n?.toLowerCase().includes(kw)); }
+    return list;
+  }, [baseNames, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  const pageNames = useMemo(() => filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE), [filtered, page]);
+  useEffect(() => { setPage(1); }, [search, materialFilter, sourceFilter]);
+
+  useEffect(() => {
+    if (materialFilter) return;
+    if (pageNames.length === 0) return;
+    const missing = pageNames.filter(n => !cache[n]);
+    if (missing.length === 0) return;
+    const pageKey = `${page}-${pageNames[0]}`;
+    if (loadingPageRef.current === pageKey) return;
+    loadingPageRef.current = pageKey;
+    setPageDetailsLoading(true);
+    getRecipeBatch(missing).then(items => {
+      const next = { ...cache };
+      items.forEach(item => { if (item?.name) next[item.name] = item; });
+      setCache(next);
+      saveCache('recipe', 'all', next);
+      setPageDetailsLoading(false);
+      loadingPageRef.current = null;
+    }).catch(() => { setPageDetailsLoading(false); loadingPageRef.current = null; });
+  }, [page, pageNames, materialFilter, cache]);
 
   const sources = useMemo(() => {
     const s = new Set();
     Object.values(cache).forEach(r => (r.availability || []).forEach(a => { if (a.from) s.add(a.from); }));
     return [...s].sort();
   }, [cache]);
-
-  const filtered = useMemo(() => {
-    let list = [...allNames];
-    if (search.trim()) { const kw = search.toLowerCase(); list = list.filter(n => n.toLowerCase().includes(kw)); }
-    if (materialFilter || sourceFilter) {
-      list = list.filter(n => {
-        const d = cache[n]; if (!d) return false;
-        if (materialFilter && !(d.materials || []).some(m => m.name === materialFilter)) return false;
-        if (sourceFilter && !(d.availability || []).some(a => a.from === sourceFilter)) return false;
-        return true;
-      });
-    }
-    return list;
-  }, [allNames, search, materialFilter, sourceFilter, cache]);
-
-  const totalPages = Math.ceil(filtered.length / PER_PAGE);
-  const pageNames = useMemo(() => filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE), [filtered, page]);
-  useEffect(() => { setPage(1); }, [search, materialFilter, sourceFilter]);
 
   const toggleLearned = (name, e) => {
     if (e) e.stopPropagation();
@@ -93,7 +127,8 @@ export default function CatalogRecipes() {
     return Object.entries(mats).sort((a, b) => a[0].localeCompare(b[0]));
   }, [shoppingList, cache]);
 
-  const pct = bgProg.total > 0 ? Math.round((bgProg.loaded / bgProg.total) * 100) : 0;
+  const getItem = (name) =>
+    materialFilter ? listFromMaterial.byName[name] : cache[name];
 
   return (
     <>
@@ -102,10 +137,7 @@ export default function CatalogRecipes() {
           <span className="material-icons">menu_book</span><span>Learned: <strong>{learned.size}</strong></span>
           <span className="ct-tracker-sep">|</span>
           <span className="material-icons">shopping_cart</span><span>Shopping: <strong>{shoppingList.size}</strong></span>
-          {bgProg.active && <><span className="ct-tracker-sep">|</span><span className="ct-bg-progress"><span className="material-icons ct-spin" style={{ fontSize: 14 }}>sync</span> {bgProg.loaded}/{bgProg.total} ({pct}%)</span></>}
-          {!bgProg.active && bgProg.total > 0 && bgProg.loaded >= bgProg.total && <><span className="ct-tracker-sep">|</span><span className="ct-bg-done"><span className="material-icons" style={{ fontSize: 14 }}>check_circle</span> Cached</span></>}
         </div>
-        {bgProg.active && <div className="ct-progress-bar"><div className="ct-progress-fill" style={{ width: `${pct}%` }} /></div>}
       </div>
 
       <div className="ct-filters">
@@ -134,7 +166,7 @@ export default function CatalogRecipes() {
             <button className={`ct-toggle-chip ${showShoppingPanel ? 'active' : ''}`} onClick={() => setShowShoppingPanel(!showShoppingPanel)}>
               <span className="material-icons" style={{ fontSize: 16 }}>shopping_cart</span> Shopping List
             </button>
-            <button className="ct-toggle-chip" onClick={() => { clearCache('recipe', 'all'); setCache({}); setBgProg({ loaded: 0, total: 0, active: false }); setRefreshKey(k => k + 1); }}>
+            <button className="ct-toggle-chip" onClick={() => { clearCache('recipe', 'all'); setCache({}); setRefreshKey(k => k + 1); }}>
               <span className="material-icons" style={{ fontSize: 16 }}>refresh</span> Refresh
             </button>
           </div>
@@ -161,12 +193,13 @@ export default function CatalogRecipes() {
         </div>
       )}
 
-      <div className="ct-results-bar"><span>{loading ? 'Loading...' : `${filtered.length} recipes`}</span></div>
+      <div className="ct-results-bar"><span>{namesLoading && baseNames.length === 0 ? 'Loading...' : `${filtered.length} recipes`}{totalPages > 1 ? ` · Page ${page}/${totalPages}` : ''}</span></div>
+      <SlowLoadingMessage loading={(namesLoading && baseNames.length === 0) || sourceDetailsLoading} />
       {error && <ErrorRetry message={error} onRetry={() => setRefreshKey(k => k + 1)} />}
-      {loading && allNames.length === 0 ? <div className="loading-spinner"><div className="spinner"></div></div> : <>
+      {namesLoading && baseNames.length === 0 ? <div className="loading-spinner"><div className="spinner"></div></div> : <>
         <div className="ct-grid">
           {pageNames.map(name => {
-            const item = cache[name];
+            const item = getItem(name);
             const img = item?.image_url;
             return (
               <div key={name} className={`ct-card ${learned.has(name) ? 'owned' : ''} ${shoppingList.has(name) ? 'wishlisted' : ''}`}

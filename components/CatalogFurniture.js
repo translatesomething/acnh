@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { getFurnitureNames, getFurnitureBatch, FURNITURE_CATEGORIES, FURNITURE_COLORS } from '../lib/api';
-import { loadSet, saveSet, loadCache, saveCache, clearCache, getPageNumbers, getBuyPrice, bgLoad } from '../lib/catalogUtils';
+import { loadSet, saveSet, loadCache, saveCache, clearCache, getPageNumbers, getBuyPrice, formatApiErrorMessage } from '../lib/catalogUtils';
 
 export default function CatalogFurniture() {
   const [category, setCategory] = useState('Housewares');
@@ -19,53 +19,34 @@ export default function CatalogFurniture() {
   const [wishlist, setWishlist] = useState(() => loadSet('ct_fur_wish'));
   const [selected, setSelected] = useState(null);
   const [page, setPage] = useState(1);
-  const [bgProg, setBgProg] = useState({ loaded: 0, total: 0, active: false });
   const [refreshKey, setRefreshKey] = useState(0);
   const PER_PAGE = 20;
-  const abortRef = useRef(null);
+  const loadingPageRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
-    abortRef.current?.abort();
-    setNamesLoading(true);
     setError(null);
-    setAllNames([]);
     setPage(1);
-    setBgProg({ loaded: 0, total: 0, active: false });
     const cached = loadCache('fur', category);
     setDetailsCache(cached);
-
-    // If we have cached data, show it immediately even while fetching fresh names
     const cachedNames = Object.keys(cached);
     if (cachedNames.length > 0) {
       setAllNames(cachedNames);
       setNamesLoading(false);
+    } else {
+      setAllNames([]);
+      setNamesLoading(true);
     }
-
     getFurnitureNames(category).then(names => {
       if (cancelled) return;
       setAllNames(names);
       setNamesLoading(false);
-      if (Object.keys(cached).length >= names.length) return;
-
-      const controller = new AbortController();
-      abortRef.current = controller;
-      setBgProg({ loaded: Object.keys(cached).length, total: names.length, active: true });
-
-      bgLoad({
-        names, cached, batchFn: getFurnitureBatch, controller,
-        onProgress: acc => { setDetailsCache({ ...acc }); setBgProg({ loaded: Object.keys(acc).length, total: names.length, active: true }); },
-        onDone: acc => { saveCache('fur', category, acc); setDetailsCache({ ...acc }); setBgProg(p => ({ ...p, active: false })); }
-      });
     }).catch(e => {
       if (cancelled) return;
       setNamesLoading(false);
-      if (cachedNames.length === 0) {
-        setError(e.name === 'AbortError' ? 'API request timed out. The server may be slow.' : 'Failed to load data. Please try again.');
-      }
+      setError(formatApiErrorMessage(e));
     });
-
-    return () => { cancelled = true; abortRef.current?.abort(); };
+    return () => { cancelled = true; };
   }, [category, refreshKey]);
 
   const filtered = useMemo(() => {
@@ -90,12 +71,31 @@ export default function CatalogFurniture() {
 
   useEffect(() => { setPage(1); }, [search, colorFilter, seriesFilter, showLucky, showCustom]);
 
+  useEffect(() => {
+    if (pageNames.length === 0) return;
+    const missing = pageNames.filter(n => !detailsCache[n]);
+    if (missing.length === 0) return;
+    const pageKey = `${category}-${page}-${pageNames[0]}`;
+    if (loadingPageRef.current === pageKey) return;
+    loadingPageRef.current = pageKey;
+    let cancelled = false;
+    getFurnitureBatch(missing).then(items => {
+      if (cancelled) return;
+      setDetailsCache(prev => {
+        const next = { ...prev };
+        items.forEach(item => { if (item?.name) next[item.name] = item; });
+        saveCache('fur', category, next);
+        return next;
+      });
+      loadingPageRef.current = null;
+    }).catch(() => { if (!cancelled) loadingPageRef.current = null; });
+    return () => { cancelled = true; };
+  }, [category, page, pageNames, detailsCache]);
+
   const toggle = (key, setter, name, e) => {
     if (e) e.stopPropagation();
     setter(prev => { const n = new Set(prev); n.has(name) ? n.delete(name) : n.add(name); saveSet(key, n); return n; });
   };
-
-  const pct = bgProg.total > 0 ? Math.round((bgProg.loaded / bgProg.total) * 100) : 0;
 
   return (
     <>
@@ -114,10 +114,7 @@ export default function CatalogFurniture() {
           <span className="material-icons">inventory_2</span><span>Owned: <strong>{owned.size}</strong></span>
           <span className="ct-tracker-sep">|</span>
           <span className="material-icons">favorite</span><span>Wishlist: <strong>{wishlist.size}</strong></span>
-          {bgProg.active && <><span className="ct-tracker-sep">|</span><span className="ct-bg-progress"><span className="material-icons ct-spin" style={{ fontSize: 14 }}>sync</span> {bgProg.loaded}/{bgProg.total} ({pct}%)</span></>}
-          {!bgProg.active && bgProg.total > 0 && bgProg.loaded >= bgProg.total && <><span className="ct-tracker-sep">|</span><span className="ct-bg-done"><span className="material-icons" style={{ fontSize: 14 }}>check_circle</span> Cached</span></>}
         </div>
-        {bgProg.active && <div className="ct-progress-bar"><div className="ct-progress-fill" style={{ width: `${pct}%` }} /></div>}
       </div>
 
       <div className="ct-filters">
@@ -142,13 +139,14 @@ export default function CatalogFurniture() {
           <div className="ct-toggle-chips">
             <button className={`ct-toggle-chip ${showLucky ? 'active' : ''}`} onClick={() => setShowLucky(!showLucky)}><span className="material-icons" style={{ fontSize: 16 }}>star</span> Lucky</button>
             <button className={`ct-toggle-chip ${showCustom ? 'active' : ''}`} onClick={() => setShowCustom(!showCustom)}><span className="material-icons" style={{ fontSize: 16 }}>brush</span> Customizable</button>
-            <button className="ct-toggle-chip" onClick={() => { clearCache('fur', category); setDetailsCache({}); setBgProg({ loaded: 0, total: 0, active: false }); setRefreshKey(k => k + 1); }}><span className="material-icons" style={{ fontSize: 16 }}>refresh</span> Refresh</button>
+            <button className="ct-toggle-chip" onClick={() => { clearCache('fur', category); setDetailsCache({}); setRefreshKey(k => k + 1); }}><span className="material-icons" style={{ fontSize: 16 }}>refresh</span> Refresh</button>
           </div>
         </div>
       </div>
 
-      <div className="ct-results-bar"><span>{namesLoading ? 'Loading...' : `${filtered.length} items`}</span></div>
+      <div className="ct-results-bar"><span>{namesLoading && allNames.length === 0 ? 'Loading...' : `${filtered.length} items`}{totalPages > 1 ? ` · Page ${page}/${totalPages}` : ''}</span></div>
 
+      <SlowLoadingMessage loading={namesLoading && allNames.length === 0} />
       {error && <ErrorRetry message={error} onRetry={() => setRefreshKey(k => k + 1)} />}
 
       {namesLoading && allNames.length === 0 ? <div className="loading-spinner"><div className="spinner"></div></div> : <>
@@ -290,6 +288,23 @@ export function ErrorRetry({ message, onRetry }) {
       <button className="ct-error-retry" onClick={onRetry}>
         <span className="material-icons">refresh</span> Retry
       </button>
+    </div>
+  );
+}
+
+/** Shown after delayMs while still loading. */
+export function SlowLoadingMessage({ loading, delayMs = 15000 }) {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    if (!loading) { setShow(false); return; }
+    const t = setTimeout(() => setShow(true), delayMs);
+    return () => clearTimeout(t);
+  }, [loading, delayMs]);
+  if (!show || !loading) return null;
+  return (
+    <div className="ct-slow-loading" role="status">
+      <span className="material-icons">schedule</span>
+      <p>Loading is taking longer than usual. Please wait or try again.</p>
     </div>
   );
 }

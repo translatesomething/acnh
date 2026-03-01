@@ -1,13 +1,18 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { getTools } from '../lib/api';
-import { loadSet, saveSet, getBuyPrice } from '../lib/catalogUtils';
-import { DetailModal, DetailActions, ErrorRetry } from './CatalogFurniture';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { getToolNames, getToolBatch, getTools } from '../lib/api';
+import { loadSet, saveSet, loadCache, saveCache, getBuyPrice, formatApiErrorMessage } from '../lib/catalogUtils';
+import { DetailModal, DetailActions, ErrorRetry, Pagination, SlowLoadingMessage } from './CatalogFurniture';
+
+const TOOLS_PER_PAGE = 24;
 
 export default function CatalogTools() {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [allNames, setAllNames] = useState([]);
+  const [detailsCache, setDetailsCache] = useState(() => loadCache('tool', 'all'));
+  const [namesLoading, setNamesLoading] = useState(true);
+  const [pageDetailsLoading, setPageDetailsLoading] = useState(false);
+  const [fullItems, setFullItems] = useState(null);
   const [error, setError] = useState(null);
   const [retryKey, setRetryKey] = useState(0);
   const [search, setSearch] = useState('');
@@ -16,24 +21,73 @@ export default function CatalogTools() {
   const [selected, setSelected] = useState(null);
   const [compareMode, setCompareMode] = useState(false);
   const [compareItems, setCompareItems] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const loadingPageRef = useRef(null);
 
+  // Stale-while-revalidate: show cache first
   useEffect(() => {
-    setLoading(true); setError(null);
-    getTools().then(data => {
-      setItems(Array.isArray(data) ? data : []);
-      setLoading(false);
+    let cancelled = false;
+    setError(null);
+    const cached = loadCache('tool', 'all');
+    const cachedNames = Object.keys(cached);
+    if (cachedNames.length > 0) {
+      setAllNames(cachedNames);
+      setNamesLoading(false);
+    } else {
+      setNamesLoading(true);
+    }
+    getToolNames().then(data => {
+      if (cancelled) return;
+      setAllNames(Array.isArray(data) ? data : []);
+      setNamesLoading(false);
     }).catch(e => {
-      setLoading(false);
-      setError(e.name === 'AbortError' ? 'API timed out.' : 'Failed to load tools.');
+      if (!cancelled) { setNamesLoading(false); setError(formatApiErrorMessage(e)); }
     });
+    return () => { cancelled = true; };
   }, [retryKey]);
 
-  const filtered = useMemo(() => {
-    let list = items;
-    if (search.trim()) { const kw = search.toLowerCase(); list = list.filter(i => i.name?.toLowerCase().includes(kw)); }
+  const filteredNames = useMemo(() => {
+    let list = allNames;
+    if (search.trim()) { const kw = search.toLowerCase(); list = list.filter(n => n?.toLowerCase().includes(kw)); }
+    return list;
+  }, [allNames, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredNames.length / TOOLS_PER_PAGE));
+  const pageNames = useMemo(() => {
+    const start = (currentPage - 1) * TOOLS_PER_PAGE;
+    return filteredNames.slice(start, start + TOOLS_PER_PAGE);
+  }, [filteredNames, currentPage]);
+
+  useEffect(() => {
+    if (pageNames.length === 0) return;
+    const missing = pageNames.filter(n => !detailsCache[n]);
+    if (missing.length === 0) return;
+    const pageKey = `${currentPage}-${pageNames[0]}`;
+    if (loadingPageRef.current === pageKey) return;
+    loadingPageRef.current = pageKey;
+    let cancelled = false;
+    setPageDetailsLoading(true);
+    getToolBatch(missing).then(items => {
+      if (cancelled) return;
+      setDetailsCache(prev => {
+        const next = { ...prev };
+        items.forEach(item => { if (item?.name) next[item.name] = item; });
+        saveCache('tool', 'all', next);
+        return next;
+      });
+      setPageDetailsLoading(false);
+      loadingPageRef.current = null;
+    }).catch(() => { if (!cancelled) { setPageDetailsLoading(false); loadingPageRef.current = null; } });
+    return () => { cancelled = true; };
+  }, [currentPage, pageNames, detailsCache]);
+
+  useEffect(() => { setCurrentPage(1); }, [search]);
+
+  const displayItems = useMemo(() => {
+    let list = pageNames.map(n => detailsCache[n] || { name: n });
     if (showCustom) list = list.filter(i => i.customizable);
     return list;
-  }, [items, search, showCustom]);
+  }, [pageNames, detailsCache, showCustom]);
 
   const toggle = (name, e) => {
     if (e) e.stopPropagation();
@@ -41,12 +95,13 @@ export default function CatalogTools() {
   };
 
   const toggleCompare = (item, e) => {
-    e.stopPropagation();
+    e?.stopPropagation();
+    if (!item?.name) return;
     setCompareItems(prev => prev.find(i => i.name === item.name) ? prev.filter(i => i.name !== item.name) : prev.length < 4 ? [...prev, item] : prev);
   };
 
-  // Group tools by base type for comparison suggestions
   const toolGroups = useMemo(() => {
+    const items = fullItems || Object.values(detailsCache).filter(Boolean);
     const groups = {};
     items.forEach(item => {
       const base = item.name.replace(/^(Flimsy|Golden|Colorful|Outdoorsy|Star Net|Fish Fishing Rod)\s*/i, '').replace(/^(Star|Fish)\s+/i, '');
@@ -55,13 +110,18 @@ export default function CatalogTools() {
       groups[key].push(item);
     });
     return Object.values(groups).filter(g => g.length > 1);
-  }, [items]);
+  }, [fullItems, detailsCache]);
+
+  const loadFullForCompare = () => {
+    if (fullItems) return;
+    getTools().then(data => setFullItems(Array.isArray(data) ? data : []));
+  };
 
   return (
     <>
       <div className="ct-tracker">
         <div className="ct-tracker-row">
-          <span className="material-icons">handyman</span><span>Owned: <strong>{owned.size}</strong> / {items.length}</span>
+          <span className="material-icons">handyman</span><span>Owned: <strong>{owned.size}</strong> / {allNames.length}</span>
         </div>
       </div>
 
@@ -76,84 +136,94 @@ export default function CatalogTools() {
             <button className={`ct-toggle-chip ${showCustom ? 'active' : ''}`} onClick={() => setShowCustom(!showCustom)}>
               <span className="material-icons" style={{ fontSize: 16 }}>brush</span> Customizable
             </button>
-            <button className={`ct-toggle-chip ${compareMode ? 'active' : ''}`} onClick={() => { setCompareMode(!compareMode); setCompareItems([]); }}>
+            <button
+              className={`ct-toggle-chip ${compareMode ? 'active' : ''}`}
+              onClick={() => { setCompareMode(!compareMode); setCompareItems([]); if (!compareMode) loadFullForCompare(); }}
+            >
               <span className="material-icons" style={{ fontSize: 16 }}>compare</span> Compare
             </button>
           </div>
         </div>
       </div>
 
-      <div className="ct-results-bar"><span>{loading ? 'Loading...' : `${filtered.length} tools`}</span></div>
+      <div className="ct-results-bar">
+        <span>{filteredNames.length} tools{totalPages > 1 ? ` · Page ${currentPage}/${totalPages}` : ''}</span>
+      </div>
+      <SlowLoadingMessage loading={namesLoading && allNames.length === 0} />
       {error && <ErrorRetry message={error} onRetry={() => setRetryKey(k => k + 1)} />}
-      {loading ? <div className="loading-spinner"><div className="spinner"></div></div> : <>
-        <div className="ct-grid">
-          {filtered.map(item => {
-            const img = item.variations?.[0]?.image_url;
-            const price = getBuyPrice(item);
-            const isComparing = compareItems.find(i => i.name === item.name);
-            return (
-              <div key={item.name} className={`ct-card ${owned.has(item.name) ? 'owned' : ''} ${isComparing ? 'wishlisted' : ''}`}
-                onClick={() => compareMode ? toggleCompare(item, { stopPropagation: () => {} }) : setSelected(item)}>
-                <div className="ct-card-img-wrap">
-                  {img ? <img src={img} alt={item.name} className="ct-card-img" loading="lazy" /> : <div className="ct-card-shimmer"><span className="material-icons">image</span></div>}
-                  {owned.has(item.name) && <span className="ct-badge ct-badge--owned"><span className="material-icons">check_circle</span></span>}
-                  {compareMode && <span className={`ct-badge ct-badge--wish`} style={{ opacity: isComparing ? 1 : 0.3 }}><span className="material-icons">compare</span></span>}
-                </div>
-                <div className="ct-card-body">
-                  <h4 className="ct-card-title">{item.name}</h4>
-                  <div className="ct-card-footer">
-                    {price && <span className="ct-card-price"><span className="material-icons">payments</span>{price.toLocaleString()}</span>}
-                    {item.uses && <span className="ct-card-vars">{item.uses} uses</span>}
-                    {item.customizable && <span className="ct-card-lucky"><span className="material-icons">brush</span></span>}
+      {namesLoading ? <div className="loading-spinner"><div className="spinner"></div></div> : (
+        <>
+          <div className="ct-grid">
+            {displayItems.map(item => {
+              const img = item.variations?.[0]?.image_url;
+              const price = getBuyPrice(item);
+              const isComparing = compareItems.find(i => i.name === item.name);
+              const hasDetails = !!item.variations?.length;
+              return (
+                <div key={item.name} className={`ct-card ${owned.has(item.name) ? 'owned' : ''} ${isComparing ? 'wishlisted' : ''}`}
+                  onClick={() => compareMode ? toggleCompare(item, { stopPropagation: () => {} }) : hasDetails && setSelected(item)}>
+                  <div className="ct-card-img-wrap">
+                    {img ? <img src={img} alt={item.name} className="ct-card-img" loading="lazy" /> : <div className="ct-card-shimmer"><span className="material-icons">image</span></div>}
+                    {owned.has(item.name) && <span className="ct-badge ct-badge--owned"><span className="material-icons">check_circle</span></span>}
+                    {compareMode && <span className={`ct-badge ct-badge--wish`} style={{ opacity: isComparing ? 1 : 0.3 }}><span className="material-icons">compare</span></span>}
+                  </div>
+                  <div className="ct-card-body">
+                    <h4 className="ct-card-title">{item.name}</h4>
+                    <div className="ct-card-footer">
+                      {price != null && <span className="ct-card-price"><span className="material-icons">payments</span>{price.toLocaleString()}</span>}
+                      {item.uses && <span className="ct-card-vars">{item.uses} uses</span>}
+                      {item.customizable && <span className="ct-card-lucky"><span className="material-icons">brush</span></span>}
+                    </div>
+                  </div>
+                  <div className="ct-card-actions">
+                    <button className={`ct-action-btn ${owned.has(item.name) ? 'active' : ''}`} onClick={e => toggle(item.name, e)}>
+                      <span className="material-icons">{owned.has(item.name) ? 'check_circle' : 'radio_button_unchecked'}</span>
+                    </button>
                   </div>
                 </div>
-                <div className="ct-card-actions">
-                  <button className={`ct-action-btn ${owned.has(item.name) ? 'active' : ''}`} onClick={e => toggle(item.name, e)}>
-                    <span className="material-icons">{owned.has(item.name) ? 'check_circle' : 'radio_button_unchecked'}</span>
-                  </button>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Comparison table */}
-        {compareMode && compareItems.length >= 2 && (
-          <div className="ct-compare-table-wrap">
-            <h3>Tool Comparison</h3>
-            <table className="ct-compare-table">
-              <thead>
-                <tr><th>Property</th>{compareItems.map(i => <th key={i.name}>{i.name}</th>)}</tr>
-              </thead>
-              <tbody>
-                <tr><td>Image</td>{compareItems.map(i => <td key={i.name}>{i.variations?.[0]?.image_url && <img src={i.variations[0].image_url} alt={i.name} style={{ width: 48, height: 48 }} />}</td>)}</tr>
-                <tr><td>Durability</td>{compareItems.map(i => <td key={i.name}>{i.uses || '—'}</td>)}</tr>
-                <tr><td>Buy Price</td>{compareItems.map(i => <td key={i.name}>{getBuyPrice(i)?.toLocaleString() || 'N/A'}</td>)}</tr>
-                <tr><td>Sell Price</td>{compareItems.map(i => <td key={i.name}>{i.sell?.toLocaleString() || '—'}</td>)}</tr>
-                <tr><td>Customizable</td>{compareItems.map(i => <td key={i.name}>{i.customizable ? `Yes (${i.custom_kits} kits)` : 'No'}</td>)}</tr>
-                <tr><td>HHA</td>{compareItems.map(i => <td key={i.name}>{i.hha_base || 0}</td>)}</tr>
-              </tbody>
-            </table>
+              );
+            })}
           </div>
-        )}
+          {totalPages > 1 && (
+            <Pagination current={currentPage} total={totalPages} onChange={setCurrentPage} />
+          )}
 
-        {/* Tool group suggestions */}
-        {compareMode && compareItems.length < 2 && toolGroups.length > 0 && (
-          <div className="ct-compare-suggest">
-            <p>Select 2-4 tools to compare, or try these groups:</p>
-            <div className="ct-toggle-chips" style={{ marginTop: 8 }}>
-              {toolGroups.slice(0, 5).map((g, i) => (
-                <button key={i} className="ct-toggle-chip" onClick={() => setCompareItems(g.slice(0, 4))}>
-                  {g.map(t => t.name).join(' vs ')}
-                </button>
-              ))}
+          {compareMode && compareItems.length >= 2 && (
+            <div className="ct-compare-table-wrap">
+              <h3>Tool Comparison</h3>
+              <table className="ct-compare-table">
+                <thead>
+                  <tr><th>Property</th>{compareItems.map(i => <th key={i.name}>{i.name}</th>)}</tr>
+                </thead>
+                <tbody>
+                  <tr><td>Image</td>{compareItems.map(i => <td key={i.name}>{i.variations?.[0]?.image_url && <img src={i.variations[0].image_url} alt={i.name} style={{ width: 48, height: 48 }} />}</td>)}</tr>
+                  <tr><td>Durability</td>{compareItems.map(i => <td key={i.name}>{i.uses || '—'}</td>)}</tr>
+                  <tr><td>Buy Price</td>{compareItems.map(i => <td key={i.name}>{getBuyPrice(i)?.toLocaleString() || 'N/A'}</td>)}</tr>
+                  <tr><td>Sell Price</td>{compareItems.map(i => <td key={i.name}>{i.sell?.toLocaleString() || '—'}</td>)}</tr>
+                  <tr><td>Customizable</td>{compareItems.map(i => <td key={i.name}>{i.customizable ? `Yes (${i.custom_kits} kits)` : 'No'}</td>)}</tr>
+                  <tr><td>HHA</td>{compareItems.map(i => <td key={i.name}>{i.hha_base || 0}</td>)}</tr>
+                </tbody>
+              </table>
             </div>
-          </div>
-        )}
-      </>}
+          )}
+
+          {compareMode && compareItems.length < 2 && toolGroups.length > 0 && (
+            <div className="ct-compare-suggest">
+              <p>Select 2-4 tools to compare, or try these groups:</p>
+              <div className="ct-toggle-chips" style={{ marginTop: 8 }}>
+                {toolGroups.slice(0, 5).map((g, i) => (
+                  <button key={i} className="ct-toggle-chip" onClick={() => setCompareItems(g.slice(0, 4))}>
+                    {g.map(t => t.name).join(' vs ')}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
 
       {selected && <DetailModal onClose={() => setSelected(null)}>
-        <ToolDetail item={selected} owned={owned} onOwn={n => toggle(n)} />
+        <ToolDetail item={selected} owned={owned} onOwn={toggle} />
       </DetailModal>}
     </>
   );

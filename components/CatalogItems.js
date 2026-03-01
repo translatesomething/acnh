@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { getItems } from '../lib/api';
-import { getBuyPrice } from '../lib/catalogUtils';
-import { DetailModal, DetailActions, ErrorRetry } from './CatalogFurniture';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { getItemNames, getItemBatch, getItems } from '../lib/api';
+import { getBuyPrice, loadCache, saveCache, formatApiErrorMessage } from '../lib/catalogUtils';
+import { DetailModal, DetailActions, ErrorRetry, Pagination, SlowLoadingMessage } from './CatalogFurniture';
 
+const ITEMS_PER_PAGE = 24;
 const GROUP_DEFS = [
   { id: 'materials', label: 'Materials', icon: 'build', test: i => !!i.material_type },
   { id: 'fences', label: 'Fences', icon: 'fence', test: i => !!i.is_fence },
@@ -29,50 +30,133 @@ function groupItems(items) {
 }
 
 export default function CatalogItems() {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [allNames, setAllNames] = useState([]);
+  const [detailsCache, setDetailsCache] = useState(() => loadCache('item', 'all'));
+  const [namesLoading, setNamesLoading] = useState(true);
+  const [pageDetailsLoading, setPageDetailsLoading] = useState(false);
+  const [fullItems, setFullItems] = useState(null);
+  const [fullItemsLoading, setFullItemsLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [activeGroup, setActiveGroup] = useState('all');
   const [seasonFilter, setSeasonFilter] = useState(null);
   const [selected, setSelected] = useState(null);
   const [error, setError] = useState(null);
   const [retryKey, setRetryKey] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const loadingPageRef = useRef(null);
 
+  // Load names only (fast) — stale-while-revalidate: show cache first
   useEffect(() => {
-    setLoading(true); setError(null);
-    getItems().then(data => {
-      setItems(Array.isArray(data) ? data : []);
-      setLoading(false);
+    let cancelled = false;
+    setError(null);
+    const cached = loadCache('item', 'all');
+    const cachedNames = Object.keys(cached);
+    if (cachedNames.length > 0) {
+      setAllNames(cachedNames);
+      setNamesLoading(false);
+    } else {
+      setNamesLoading(true);
+    }
+    getItemNames().then(data => {
+      if (cancelled) return;
+      setAllNames(Array.isArray(data) ? data : []);
+      setNamesLoading(false);
     }).catch(e => {
-      setLoading(false);
-      setError(e.name === 'AbortError' ? 'API timed out.' : 'Failed to load items.');
+      if (!cancelled) { setNamesLoading(false); setError(formatApiErrorMessage(e)); }
     });
+    return () => { cancelled = true; };
   }, [retryKey]);
 
-  const groups = useMemo(() => groupItems(items), [items]);
-
+  const groups = useMemo(() => fullItems ? groupItems(fullItems) : {}, [fullItems]);
   const seasons = useMemo(() => {
+    if (!fullItems?.length) return [];
     const s = new Set();
-    items.forEach(i => { if (i.material_seasonality) s.add(i.material_seasonality); });
+    fullItems.forEach(i => { if (i.material_seasonality) s.add(i.material_seasonality); });
     return [...s].sort();
-  }, [items]);
+  }, [fullItems]);
 
-  const filtered = useMemo(() => {
-    let list = activeGroup === 'all' ? items : (groups[activeGroup] || []);
+  // Filtered names for "All" view (search only)
+  const filteredNames = useMemo(() => {
+    if (!search.trim()) return allNames;
+    const kw = search.toLowerCase();
+    return allNames.filter(n => n?.toLowerCase().includes(kw));
+  }, [allNames, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredNames.length / ITEMS_PER_PAGE));
+  const pageNames = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredNames.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredNames, currentPage]);
+
+  // Load details only for current page (when in "All" view)
+  useEffect(() => {
+    if (activeGroup !== 'all' || pageNames.length === 0) return;
+    const missing = pageNames.filter(n => !detailsCache[n]);
+    if (missing.length === 0) return;
+    const pageKey = `${currentPage}-${pageNames[0]}`;
+    if (loadingPageRef.current === pageKey) return;
+    loadingPageRef.current = pageKey;
+    let cancelled = false;
+    setPageDetailsLoading(true);
+    getItemBatch(missing).then(items => {
+      if (cancelled) return;
+      setDetailsCache(prev => {
+        const next = { ...prev };
+        items.forEach(item => { if (item?.name) next[item.name] = item; });
+        saveCache('item', 'all', next);
+        return next;
+      });
+      setPageDetailsLoading(false);
+      loadingPageRef.current = null;
+    }).catch(() => {
+      if (!cancelled) { setPageDetailsLoading(false); loadingPageRef.current = null; }
+    });
+    return () => { cancelled = true; };
+  }, [activeGroup, currentPage, pageNames, detailsCache]);
+
+  useEffect(() => { setCurrentPage(1); }, [search, activeGroup]);
+
+  // When switching to a group, load full list once
+  const groupLoadCancelledRef = useRef(false);
+  const handleGroupTab = (id) => {
+    groupLoadCancelledRef.current = true;
+    setActiveGroup(id);
+    if (id === 'all') return;
+    if (fullItems) return;
+    groupLoadCancelledRef.current = false;
+    setFullItemsLoading(true);
+    getItems().then(data => {
+      if (groupLoadCancelledRef.current) return;
+      setFullItems(Array.isArray(data) ? data : []);
+      setFullItemsLoading(false);
+    }).catch(() => { if (!groupLoadCancelledRef.current) setFullItemsLoading(false); });
+  };
+  useEffect(() => () => { groupLoadCancelledRef.current = true; }, []);
+
+  const filteredGroupItems = useMemo(() => {
+    if (activeGroup === 'all') return [];
+    let list = groups[activeGroup] || [];
     if (search.trim()) { const kw = search.toLowerCase(); list = list.filter(i => i.name?.toLowerCase().includes(kw)); }
     if (seasonFilter) list = list.filter(i => i.material_seasonality === seasonFilter);
     return list;
-  }, [items, groups, activeGroup, search, seasonFilter]);
+  }, [groups, activeGroup, search, seasonFilter]);
+
+  const showAllView = activeGroup === 'all';
+  const displayItems = showAllView
+    ? pageNames.map(name => detailsCache[name] || { name })
+    : filteredGroupItems;
+  const loadingFullForGroup = activeGroup !== 'all' && fullItemsLoading && !fullItems?.length;
 
   return (
     <>
       <div className="ct-cat-tabs">
         <button className={`ct-cat-tab ${activeGroup === 'all' ? 'active' : ''}`} onClick={() => setActiveGroup('all')}>
-          <span className="material-icons" style={{ fontSize: 18 }}>apps</span>All ({items.length})
+          <span className="material-icons" style={{ fontSize: 18 }}>apps</span>All ({allNames.length})
         </button>
-        {GROUP_DEFS.map(g => groups[g.id]?.length > 0 && (
-          <button key={g.id} className={`ct-cat-tab ${activeGroup === g.id ? 'active' : ''}`} onClick={() => setActiveGroup(g.id)}>
-            <span className="material-icons" style={{ fontSize: 18 }}>{g.icon}</span>{g.label} ({groups[g.id].length})
+        {GROUP_DEFS.map(g => (
+          <button key={g.id} className={`ct-cat-tab ${activeGroup === g.id ? 'active' : ''}`} onClick={() => handleGroupTab(g.id)}>
+            <span className="material-icons" style={{ fontSize: 18 }}>{g.icon}</span>
+            {g.label} ({fullItems ? (groups[g.id]?.length ?? 0) : '…'})
           </button>
         ))}
       </div>
@@ -91,31 +175,49 @@ export default function CatalogItems() {
         </div>}
       </div>
 
-      <div className="ct-results-bar"><span>{loading ? 'Loading...' : `${filtered.length} items`}</span></div>
+      <div className="ct-results-bar">
+        <span>
+          {showAllView ? `${filteredNames.length} items` : `${filteredGroupItems.length} items`}
+          {showAllView && totalPages > 1 && ` · Page ${currentPage}/${totalPages}`}
+        </span>
+      </div>
+      <SlowLoadingMessage loading={namesLoading && allNames.length === 0} />
       {error && <ErrorRetry message={error} onRetry={() => setRetryKey(k => k + 1)} />}
-      {loading ? <div className="loading-spinner"><div className="spinner"></div></div> : (
-        <div className="ct-grid">
-          {filtered.map(item => {
-            const img = item.image_url || item.variations?.[0]?.image_url;
-            const price = getBuyPrice(item);
-            return (
-              <div key={item.name} className="ct-card" onClick={() => setSelected(item)}>
-                <div className="ct-card-img-wrap">
-                  {img ? <img src={img} alt={item.name} className="ct-card-img" loading="lazy" /> : <div className="ct-card-shimmer"><span className="material-icons">image</span></div>}
-                </div>
-                <div className="ct-card-body">
-                  <h4 className="ct-card-title">{item.name}</h4>
-                  <div className="ct-card-footer">
-                    {price && <span className="ct-card-price"><span className="material-icons">payments</span>{price.toLocaleString()}</span>}
-                    {item.stack > 1 && <span className="ct-card-vars">×{item.stack}</span>}
-                    {item.is_fence && <span className="ct-card-lucky"><span className="material-icons">fence</span></span>}
-                    {item.edible && <span className="ct-card-lucky"><span className="material-icons">nutrition</span></span>}
+      {namesLoading ? <div className="loading-spinner"><div className="spinner"></div></div> : loadingFullForGroup ? (
+        <div className="loading-spinner"><div className="spinner"></div><p style={{ marginTop: 8, fontSize: 14 }}>Loading group…</p></div>
+      ) : (
+        <>
+          <div className="ct-grid">
+            {displayItems.map(item => {
+              const img = item.image_url || item.variations?.[0]?.image_url;
+              const price = getBuyPrice(item);
+              const hasDetails = !!item.image_url;
+              return (
+                <div key={item.name} className="ct-card" onClick={() => hasDetails && setSelected(item)}>
+                  <div className="ct-card-img-wrap">
+                    {img ? <img src={img} alt={item.name} className="ct-card-img" loading="lazy" /> : <div className="ct-card-shimmer"><span className="material-icons">image</span></div>}
+                  </div>
+                  <div className="ct-card-body">
+                    <h4 className="ct-card-title">{item.name}</h4>
+                    <div className="ct-card-footer">
+                      {price != null && <span className="ct-card-price"><span className="material-icons">payments</span>{price.toLocaleString()}</span>}
+                      {item.stack > 1 && <span className="ct-card-vars">×{item.stack}</span>}
+                      {item.is_fence && <span className="ct-card-lucky"><span className="material-icons">fence</span></span>}
+                      {item.edible && <span className="ct-card-lucky"><span className="material-icons">nutrition</span></span>}
+                    </div>
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+          {showAllView && totalPages > 1 && (
+            <Pagination
+              current={currentPage}
+              total={totalPages}
+              onChange={setCurrentPage}
+            />
+          )}
+        </>
       )}
 
       {selected && <DetailModal onClose={() => setSelected(null)}>

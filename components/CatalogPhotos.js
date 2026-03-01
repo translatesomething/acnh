@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { getPhotoNames, getPhotoBatch } from '../lib/api';
-import { loadSet, saveSet, loadCache, saveCache, clearCache, bgLoad } from '../lib/catalogUtils';
-import { Pagination, DetailModal, DetailActions, ErrorRetry } from './CatalogFurniture';
+import { loadSet, saveSet, loadCache, saveCache, clearCache, formatApiErrorMessage } from '../lib/catalogUtils';
+import { Pagination, DetailModal, DetailActions, ErrorRetry, SlowLoadingMessage } from './CatalogFurniture';
 
 export default function CatalogPhotos() {
   const [allNames, setAllNames] = useState([]);
@@ -15,34 +15,28 @@ export default function CatalogPhotos() {
   const [owned, setOwned] = useState(() => loadSet('ct_photo_owned'));
   const [selected, setSelected] = useState(null);
   const [page, setPage] = useState(1);
-  const [bgProg, setBgProg] = useState({ loaded: 0, total: 0, active: false });
   const [refreshKey, setRefreshKey] = useState(0);
   const PER_PAGE = 24;
-  const abortRef = useRef(null);
+  const loadingPageRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
-    abortRef.current?.abort();
-    setLoading(true); setError(null); setAllNames([]); setPage(1);
-    setBgProg({ loaded: 0, total: 0, active: false });
+    setError(null); setPage(1);
     const cached = loadCache('photo', 'all');
     setCache(cached);
     const cachedNames = Object.keys(cached);
-    if (cachedNames.length > 0) { setAllNames(cachedNames); setLoading(false); }
-
+    if (cachedNames.length > 0) {
+      setAllNames(cachedNames);
+      setLoading(false);
+    } else {
+      setAllNames([]);
+      setLoading(true);
+    }
     getPhotoNames().then(names => {
       if (cancelled) return;
       setAllNames(names); setLoading(false);
-      if (Object.keys(cached).length >= names.length) return;
-      const controller = new AbortController(); abortRef.current = controller;
-      setBgProg({ loaded: Object.keys(cached).length, total: names.length, active: true });
-      bgLoad({ names, cached, batchFn: getPhotoBatch, controller,
-        onProgress: acc => { setCache({ ...acc }); setBgProg({ loaded: Object.keys(acc).length, total: names.length, active: true }); },
-        onDone: acc => { saveCache('photo', 'all', acc); setCache({ ...acc }); setBgProg(p => ({ ...p, active: false })); }
-      });
-    }).catch(e => { if (!cancelled) { setLoading(false); if (cachedNames.length === 0) setError(e.name === 'AbortError' ? 'API timed out.' : 'Failed to load.'); } });
-
-    return () => { cancelled = true; abortRef.current?.abort(); };
+    }).catch(e => { if (!cancelled) { setLoading(false); setError(formatApiErrorMessage(e)); } });
+    return () => { cancelled = true; };
   }, [refreshKey]);
 
   const categories = useMemo(() => {
@@ -62,22 +56,38 @@ export default function CatalogPhotos() {
   const pageNames = useMemo(() => filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE), [filtered, page]);
   useEffect(() => { setPage(1); }, [search, catFilter]);
 
+  useEffect(() => {
+    if (pageNames.length === 0) return;
+    const missing = pageNames.filter(n => !cache[n]);
+    if (missing.length === 0) return;
+    const pageKey = `${page}-${pageNames[0]}`;
+    if (loadingPageRef.current === pageKey) return;
+    loadingPageRef.current = pageKey;
+    let cancelled = false;
+    getPhotoBatch(missing).then(items => {
+      if (cancelled) return;
+      setCache(prev => {
+        const next = { ...prev };
+        items.forEach(item => { if (item?.name) next[item.name] = item; });
+        saveCache('photo', 'all', next);
+        return next;
+      });
+      loadingPageRef.current = null;
+    }).catch(() => { if (!cancelled) loadingPageRef.current = null; });
+    return () => { cancelled = true; };
+  }, [page, pageNames, cache]);
+
   const toggle = (name, e) => {
     if (e) e.stopPropagation();
     setOwned(prev => { const n = new Set(prev); n.has(name) ? n.delete(name) : n.add(name); saveSet('ct_photo_owned', n); return n; });
   };
-
-  const pct = bgProg.total > 0 ? Math.round((bgProg.loaded / bgProg.total) * 100) : 0;
 
   return (
     <>
       <div className="ct-tracker">
         <div className="ct-tracker-row">
           <span className="material-icons">photo_library</span><span>Owned: <strong>{owned.size}</strong></span>
-          {bgProg.active && <><span className="ct-tracker-sep">|</span><span className="ct-bg-progress"><span className="material-icons ct-spin" style={{ fontSize: 14 }}>sync</span> {bgProg.loaded}/{bgProg.total} ({pct}%)</span></>}
-          {!bgProg.active && bgProg.total > 0 && bgProg.loaded >= bgProg.total && <><span className="ct-tracker-sep">|</span><span className="ct-bg-done"><span className="material-icons" style={{ fontSize: 14 }}>check_circle</span> Cached</span></>}
         </div>
-        {bgProg.active && <div className="ct-progress-bar"><div className="ct-progress-fill" style={{ width: `${pct}%` }} /></div>}
       </div>
 
       <div className="ct-filters">
@@ -94,14 +104,15 @@ export default function CatalogPhotos() {
         </div>}
         <div className="ct-filter-row"><span className="ct-filter-label">Quick</span>
           <div className="ct-toggle-chips">
-            <button className="ct-toggle-chip" onClick={() => { clearCache('photo', 'all'); setCache({}); setBgProg({ loaded: 0, total: 0, active: false }); setRefreshKey(k => k + 1); }}>
+            <button className="ct-toggle-chip" onClick={() => { clearCache('photo', 'all'); setCache({}); setRefreshKey(k => k + 1); }}>
               <span className="material-icons" style={{ fontSize: 16 }}>refresh</span> Refresh
             </button>
           </div>
         </div>
       </div>
 
-      <div className="ct-results-bar"><span>{loading ? 'Loading...' : `${filtered.length} items`}</span></div>
+      <div className="ct-results-bar"><span>{loading && allNames.length === 0 ? 'Loading...' : `${filtered.length} items`}{totalPages > 1 ? ` · Page ${page}/${totalPages}` : ''}</span></div>
+      <SlowLoadingMessage loading={loading && allNames.length === 0} />
       {error && <ErrorRetry message={error} onRetry={() => setRefreshKey(k => k + 1)} />}
       {loading && allNames.length === 0 ? <div className="loading-spinner"><div className="spinner"></div></div> : <>
         <div className="ct-grid">
