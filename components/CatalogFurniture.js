@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { getFurnitureNames, getFurnitureBatch, FURNITURE_CATEGORIES, FURNITURE_COLORS } from '../lib/api';
+import { useState, useEffect, useMemo } from 'react';
+import { getFurnitureNames, getFurnitureItem, FURNITURE_CATEGORIES, FURNITURE_COLORS } from '../lib/api';
 import { loadSet, saveSet, loadCache, saveCache, clearCache, getPageNumbers, getBuyPrice, formatApiErrorMessage } from '../lib/catalogUtils';
 
 export default function CatalogFurniture() {
@@ -18,10 +18,11 @@ export default function CatalogFurniture() {
   const [owned, setOwned] = useState(() => loadSet('ct_fur_owned'));
   const [wishlist, setWishlist] = useState(() => loadSet('ct_fur_wish'));
   const [selected, setSelected] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState(null);
   const [page, setPage] = useState(1);
   const [refreshKey, setRefreshKey] = useState(0);
   const PER_PAGE = 20;
-  const loadingPageRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -71,26 +72,20 @@ export default function CatalogFurniture() {
 
   useEffect(() => { setPage(1); }, [search, colorFilter, seriesFilter, showLucky, showCustom]);
 
-  useEffect(() => {
-    if (pageNames.length === 0) return;
-    const missing = pageNames.filter(n => !detailsCache[n]);
-    if (missing.length === 0) return;
-    const pageKey = `${category}-${page}-${pageNames[0]}`;
-    if (loadingPageRef.current === pageKey) return;
-    loadingPageRef.current = pageKey;
-    let cancelled = false;
-    getFurnitureBatch(missing).then(items => {
-      if (cancelled) return;
-      setDetailsCache(prev => {
-        const next = { ...prev };
-        items.forEach(item => { if (item?.name) next[item.name] = item; });
-        saveCache('fur', category, next);
-        return next;
-      });
-      loadingPageRef.current = null;
-    }).catch(() => { if (!cancelled) loadingPageRef.current = null; });
-    return () => { cancelled = true; };
-  }, [category, page, pageNames, detailsCache]);
+  const handleCardClick = (name) => {
+    if (detailsCache[name]) { setSelected(detailsCache[name]); return; }
+    setSelected(null);
+    setDetailLoading(true);
+    setDetailError(null);
+    getFurnitureItem(name).then(item => {
+      if (!item) { setDetailError('Item not found.'); setDetailLoading(false); return; }
+      setDetailsCache(prev => { const n = { ...prev, [item.name]: item }; saveCache('fur', category, n); return n; });
+      setSelected(item);
+      setDetailLoading(false);
+    }).catch(() => { setDetailError('Failed to load item.'); setDetailLoading(false); });
+  };
+
+  const closeModal = () => { setSelected(null); setDetailLoading(false); setDetailError(null); };
 
   const toggle = (key, setter, name, e) => {
     if (e) e.stopPropagation();
@@ -151,7 +146,7 @@ export default function CatalogFurniture() {
 
       {namesLoading && allNames.length === 0 ? <div className="loading-spinner"><div className="spinner"></div></div> : <>
         <CatalogGrid items={pageNames} cache={detailsCache} owned={owned} wishlist={wishlist}
-          onSelect={n => detailsCache[n] && setSelected(detailsCache[n])}
+          onSelect={handleCardClick}
           onOwn={(n, e) => toggle('ct_fur_owned', setOwned, n, e)}
           onWish={(n, e) => toggle('ct_fur_wish', setWishlist, n, e)}
           getImg={item => item?.variations?.[0]?.image_url}
@@ -167,9 +162,13 @@ export default function CatalogFurniture() {
         {totalPages > 1 && <Pagination current={page} total={totalPages} onChange={setPage} />}
       </>}
 
-      {selected && <DetailModal onClose={() => setSelected(null)}>
-        <FurnitureDetail item={selected} owned={owned} wishlist={wishlist}
-          onOwn={n => toggle('ct_fur_owned', setOwned, n)} onWish={n => toggle('ct_fur_wish', setWishlist, n)} />
+      {(selected || detailLoading || detailError) && <DetailModal onClose={closeModal}>
+        {detailLoading
+          ? <div className="loading-spinner"><div className="spinner"></div><p style={{ marginTop: 8, fontSize: 14 }}>Loading...</p></div>
+          : detailError
+            ? <div className="ct-error"><span className="material-icons">cloud_off</span><p>{detailError}</p></div>
+            : <FurnitureDetail item={selected} owned={owned} wishlist={wishlist}
+                onOwn={n => toggle('ct_fur_owned', setOwned, n)} onWish={n => toggle('ct_fur_wish', setWishlist, n)} />}
       </DetailModal>}
     </>
   );

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { getPhotoNames, getPhotoBatch } from '../lib/api';
+import { useState, useEffect, useMemo } from 'react';
+import { getPhotoNames, getPhotoItem } from '../lib/api';
 import { loadSet, saveSet, loadCache, saveCache, clearCache, formatApiErrorMessage } from '../lib/catalogUtils';
 import { Pagination, DetailModal, DetailActions, ErrorRetry, SlowLoadingMessage } from './CatalogFurniture';
 
@@ -14,10 +14,11 @@ export default function CatalogPhotos() {
   const [catFilter, setCatFilter] = useState(null);
   const [owned, setOwned] = useState(() => loadSet('ct_photo_owned'));
   const [selected, setSelected] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState(null);
   const [page, setPage] = useState(1);
   const [refreshKey, setRefreshKey] = useState(0);
   const PER_PAGE = 24;
-  const loadingPageRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -56,26 +57,20 @@ export default function CatalogPhotos() {
   const pageNames = useMemo(() => filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE), [filtered, page]);
   useEffect(() => { setPage(1); }, [search, catFilter]);
 
-  useEffect(() => {
-    if (pageNames.length === 0) return;
-    const missing = pageNames.filter(n => !cache[n]);
-    if (missing.length === 0) return;
-    const pageKey = `${page}-${pageNames[0]}`;
-    if (loadingPageRef.current === pageKey) return;
-    loadingPageRef.current = pageKey;
-    let cancelled = false;
-    getPhotoBatch(missing).then(items => {
-      if (cancelled) return;
-      setCache(prev => {
-        const next = { ...prev };
-        items.forEach(item => { if (item?.name) next[item.name] = item; });
-        saveCache('photo', 'all', next);
-        return next;
-      });
-      loadingPageRef.current = null;
-    }).catch(() => { if (!cancelled) loadingPageRef.current = null; });
-    return () => { cancelled = true; };
-  }, [page, pageNames, cache]);
+  const handleCardClick = (name) => {
+    if (cache[name]) { setSelected(cache[name]); return; }
+    setSelected(null);
+    setDetailLoading(true);
+    setDetailError(null);
+    getPhotoItem(name).then(item => {
+      if (!item) { setDetailError('Item not found.'); setDetailLoading(false); return; }
+      setCache(prev => { const n = { ...prev, [item.name]: item }; saveCache('photo', 'all', n); return n; });
+      setSelected(item);
+      setDetailLoading(false);
+    }).catch(() => { setDetailError('Failed to load item.'); setDetailLoading(false); });
+  };
+
+  const closeModal = () => { setSelected(null); setDetailLoading(false); setDetailError(null); };
 
   const toggle = (name, e) => {
     if (e) e.stopPropagation();
@@ -120,7 +115,7 @@ export default function CatalogPhotos() {
             const item = cache[name];
             const img = item?.variations?.[0]?.image_url;
             return (
-              <div key={name} className={`ct-card ${owned.has(name) ? 'owned' : ''}`} onClick={() => item && setSelected(item)}>
+              <div key={name} className={`ct-card ${owned.has(name) ? 'owned' : ''}`} onClick={() => handleCardClick(name)}>
                 <div className="ct-card-img-wrap">
                   {img ? <img src={img} alt={name} className="ct-card-img" loading="lazy" /> : <div className="ct-card-shimmer"><span className="material-icons">image</span></div>}
                   {owned.has(name) && <span className="ct-badge ct-badge--owned"><span className="material-icons">check_circle</span></span>}
@@ -144,8 +139,12 @@ export default function CatalogPhotos() {
         {totalPages > 1 && <Pagination current={page} total={totalPages} onChange={setPage} />}
       </>}
 
-      {selected && <DetailModal onClose={() => setSelected(null)}>
-        <PhotoDetail item={selected} owned={owned} onOwn={n => toggle(n)} />
+      {(selected || detailLoading || detailError) && <DetailModal onClose={closeModal}>
+        {detailLoading
+          ? <div className="loading-spinner"><div className="spinner"></div><p style={{ marginTop: 8, fontSize: 14 }}>Loading...</p></div>
+          : detailError
+            ? <div className="ct-error"><span className="material-icons">cloud_off</span><p>{detailError}</p></div>
+            : <PhotoDetail item={selected} owned={owned} onOwn={n => toggle(n)} />}
       </DetailModal>}
     </>
   );

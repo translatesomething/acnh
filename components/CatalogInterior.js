@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { getInteriorNames, getInteriorBatch, INTERIOR_CATEGORIES, FURNITURE_COLORS } from '../lib/api';
+import { useState, useEffect, useMemo } from 'react';
+import { getInteriorNames, getInteriorItem, INTERIOR_CATEGORIES, FURNITURE_COLORS } from '../lib/api';
 import { loadSet, saveSet, loadCache, saveCache, clearCache, getBuyPrice, formatApiErrorMessage } from '../lib/catalogUtils';
 import { CatalogGrid, Pagination, DetailModal, DetailActions, ErrorRetry, SlowLoadingMessage } from './CatalogFurniture';
 
@@ -16,10 +16,11 @@ export default function CatalogInterior() {
   const [seriesFilter, setSeriesFilter] = useState(null);
   const [owned, setOwned] = useState(() => loadSet('ct_int_owned'));
   const [selected, setSelected] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState(null);
   const [page, setPage] = useState(1);
   const [refreshKey, setRefreshKey] = useState(0);
   const PER_PAGE = 24;
-  const loadingPageRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -61,26 +62,20 @@ export default function CatalogInterior() {
 
   useEffect(() => { setPage(1); }, [search, colorFilter, seriesFilter]);
 
-  useEffect(() => {
-    if (pageNames.length === 0) return;
-    const missing = pageNames.filter(n => !cache[n]);
-    if (missing.length === 0) return;
-    const pageKey = `${category}-${page}-${pageNames[0]}`;
-    if (loadingPageRef.current === pageKey) return;
-    loadingPageRef.current = pageKey;
-    let cancelled = false;
-    getInteriorBatch(missing).then(items => {
-      if (cancelled) return;
-      setCache(prev => {
-        const next = { ...prev };
-        items.forEach(item => { if (item?.name) next[item.name] = item; });
-        saveCache('int', category, next);
-        return next;
-      });
-      loadingPageRef.current = null;
-    }).catch(() => { if (!cancelled) loadingPageRef.current = null; });
-    return () => { cancelled = true; };
-  }, [category, page, pageNames, cache]);
+  const handleCardClick = (name) => {
+    if (cache[name]) { setSelected(cache[name]); return; }
+    setSelected(null);
+    setDetailLoading(true);
+    setDetailError(null);
+    getInteriorItem(name).then(item => {
+      if (!item) { setDetailError('Item not found.'); setDetailLoading(false); return; }
+      setCache(prev => { const n = { ...prev, [item.name]: item }; saveCache('int', category, n); return n; });
+      setSelected(item);
+      setDetailLoading(false);
+    }).catch(() => { setDetailError('Failed to load item.'); setDetailLoading(false); });
+  };
+
+  const closeModal = () => { setSelected(null); setDetailLoading(false); setDetailError(null); };
 
   const toggle = (key, setter, name, e) => {
     if (e) e.stopPropagation();
@@ -135,7 +130,7 @@ export default function CatalogInterior() {
       {error && <ErrorRetry message={error} onRetry={() => setRefreshKey(k => k + 1)} />}
       {loading && allNames.length === 0 ? <div className="loading-spinner"><div className="spinner"></div></div> : <>
         <CatalogGrid items={pageNames} cache={cache} owned={owned}
-          onSelect={n => cache[n] && setSelected(cache[n])}
+          onSelect={handleCardClick}
           onOwn={(n, e) => toggle('ct_int_owned', setOwned, n, e)}
           getImg={item => item?.image_url || item?.variations?.[0]?.image_url}
           getExtra={item => item ? <>
@@ -149,8 +144,12 @@ export default function CatalogInterior() {
         {totalPages > 1 && <Pagination current={page} total={totalPages} onChange={setPage} />}
       </>}
 
-      {selected && <DetailModal onClose={() => setSelected(null)}>
-        <InteriorDetail item={selected} owned={owned} onOwn={n => toggle('ct_int_owned', setOwned, n)} />
+      {(selected || detailLoading || detailError) && <DetailModal onClose={closeModal}>
+        {detailLoading
+          ? <div className="loading-spinner"><div className="spinner"></div><p style={{ marginTop: 8, fontSize: 14 }}>Loading...</p></div>
+          : detailError
+            ? <div className="ct-error"><span className="material-icons">cloud_off</span><p>{detailError}</p></div>
+            : <InteriorDetail item={selected} owned={owned} onOwn={n => toggle('ct_int_owned', setOwned, n)} />}
       </DetailModal>}
     </>
   );

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { getItemNames, getItemBatch, getItems } from '../lib/api';
+import { getItemNames, getItemDetail, getItems } from '../lib/api';
 import { getBuyPrice, loadCache, saveCache, formatApiErrorMessage } from '../lib/catalogUtils';
 import { DetailModal, DetailActions, ErrorRetry, Pagination, SlowLoadingMessage } from './CatalogFurniture';
 
@@ -33,8 +33,9 @@ export default function CatalogItems() {
   const [allNames, setAllNames] = useState([]);
   const [detailsCache, setDetailsCache] = useState(() => loadCache('item', 'all'));
   const [namesLoading, setNamesLoading] = useState(true);
-  const [pageDetailsLoading, setPageDetailsLoading] = useState(false);
   const [fullItems, setFullItems] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState(null);
   const [fullItemsLoading, setFullItemsLoading] = useState(false);
   const [search, setSearch] = useState('');
   const [activeGroup, setActiveGroup] = useState('all');
@@ -43,7 +44,6 @@ export default function CatalogItems() {
   const [error, setError] = useState(null);
   const [retryKey, setRetryKey] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const loadingPageRef = useRef(null);
 
   // Load names only (fast) — stale-while-revalidate: show cache first
   useEffect(() => {
@@ -88,33 +88,24 @@ export default function CatalogItems() {
     return filteredNames.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredNames, currentPage]);
 
-  // Load details only for current page (when in "All" view)
-  useEffect(() => {
-    if (activeGroup !== 'all' || pageNames.length === 0) return;
-    const missing = pageNames.filter(n => !detailsCache[n]);
-    if (missing.length === 0) return;
-    const pageKey = `${currentPage}-${pageNames[0]}`;
-    if (loadingPageRef.current === pageKey) return;
-    loadingPageRef.current = pageKey;
-    let cancelled = false;
-    setPageDetailsLoading(true);
-    getItemBatch(missing).then(items => {
-      if (cancelled) return;
-      setDetailsCache(prev => {
-        const next = { ...prev };
-        items.forEach(item => { if (item?.name) next[item.name] = item; });
-        saveCache('item', 'all', next);
-        return next;
-      });
-      setPageDetailsLoading(false);
-      loadingPageRef.current = null;
-    }).catch(() => {
-      if (!cancelled) { setPageDetailsLoading(false); loadingPageRef.current = null; }
-    });
-    return () => { cancelled = true; };
-  }, [activeGroup, currentPage, pageNames, detailsCache]);
-
   useEffect(() => { setCurrentPage(1); }, [search, activeGroup]);
+
+  const handleCardClick = (item) => {
+    if (!item?.name) return;
+    if (detailsCache[item.name]?.image_url) { setSelected(detailsCache[item.name]); return; }
+    if (item.image_url) { setSelected(item); return; }
+    setSelected(null);
+    setDetailLoading(true);
+    setDetailError(null);
+    getItemDetail(item.name).then(detail => {
+      if (!detail) { setDetailError('Item not found.'); setDetailLoading(false); return; }
+      setDetailsCache(prev => { const n = { ...prev, [detail.name]: detail }; saveCache('item', 'all', n); return n; });
+      setSelected(detail);
+      setDetailLoading(false);
+    }).catch(() => { setDetailError('Failed to load item.'); setDetailLoading(false); });
+  };
+
+  const closeModal = () => { setSelected(null); setDetailLoading(false); setDetailError(null); };
 
   // When switching to a group, load full list once
   const groupLoadCancelledRef = useRef(false);
@@ -191,9 +182,8 @@ export default function CatalogItems() {
             {displayItems.map(item => {
               const img = item.image_url || item.variations?.[0]?.image_url;
               const price = getBuyPrice(item);
-              const hasDetails = !!item.image_url;
               return (
-                <div key={item.name} className="ct-card" onClick={() => hasDetails && setSelected(item)}>
+                <div key={item.name} className="ct-card" onClick={() => handleCardClick(item)}>
                   <div className="ct-card-img-wrap">
                     {img ? <img src={img} alt={item.name} className="ct-card-img" loading="lazy" /> : <div className="ct-card-shimmer"><span className="material-icons">image</span></div>}
                   </div>
@@ -220,8 +210,12 @@ export default function CatalogItems() {
         </>
       )}
 
-      {selected && <DetailModal onClose={() => setSelected(null)}>
-        <ItemDetail item={selected} />
+      {(selected || detailLoading || detailError) && <DetailModal onClose={closeModal}>
+        {detailLoading
+          ? <div className="loading-spinner"><div className="spinner"></div><p style={{ marginTop: 8, fontSize: 14 }}>Loading...</p></div>
+          : detailError
+            ? <div className="ct-error"><span className="material-icons">cloud_off</span><p>{detailError}</p></div>
+            : <ItemDetail item={selected} />}
       </DetailModal>}
     </>
   );

@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { getClothingNames, getClothingBatch, CLOTHING_CATEGORIES, CLOTHING_STYLES, CLOTHING_LABEL_THEMES, FURNITURE_COLORS } from '../lib/api';
+import { useState, useEffect, useMemo } from 'react';
+import { getClothingNames, getClothingItem, CLOTHING_CATEGORIES, CLOTHING_STYLES, CLOTHING_LABEL_THEMES, FURNITURE_COLORS } from '../lib/api';
 import { loadSet, saveSet, loadCache, saveCache, clearCache, getBuyPrice, formatApiErrorMessage } from '../lib/catalogUtils';
 import { CatalogGrid, Pagination, DetailModal, DetailActions, ErrorRetry, SlowLoadingMessage } from './CatalogFurniture';
 
@@ -19,10 +19,11 @@ export default function CatalogClothing() {
   const [owned, setOwned] = useState(() => loadSet('ct_cloth_owned'));
   const [wishlist, setWishlist] = useState(() => loadSet('ct_cloth_wish'));
   const [selected, setSelected] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState(null);
   const [page, setPage] = useState(1);
   const [refreshKey, setRefreshKey] = useState(0);
   const PER_PAGE = 20;
-  const loadingPageRef = useRef(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -64,26 +65,20 @@ export default function CatalogClothing() {
   const pageNames = useMemo(() => filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE), [filtered, page]);
   useEffect(() => { setPage(1); }, [search, colorFilter, styleFilter, labelFilter, showVillEquip]);
 
-  useEffect(() => {
-    if (pageNames.length === 0) return;
-    const missing = pageNames.filter(n => !cache[n]);
-    if (missing.length === 0) return;
-    const pageKey = `${category}-${page}-${pageNames[0]}`;
-    if (loadingPageRef.current === pageKey) return;
-    loadingPageRef.current = pageKey;
-    let cancelled = false;
-    getClothingBatch(missing).then(items => {
-      if (cancelled) return;
-      setCache(prev => {
-        const next = { ...prev };
-        items.forEach(item => { if (item?.name) next[item.name] = item; });
-        saveCache('cloth', category, next);
-        return next;
-      });
-      loadingPageRef.current = null;
-    }).catch(() => { if (!cancelled) loadingPageRef.current = null; });
-    return () => { cancelled = true; };
-  }, [category, page, pageNames, cache]);
+  const handleCardClick = (name) => {
+    if (cache[name]) { setSelected(cache[name]); return; }
+    setSelected(null);
+    setDetailLoading(true);
+    setDetailError(null);
+    getClothingItem(name).then(item => {
+      if (!item) { setDetailError('Item not found.'); setDetailLoading(false); return; }
+      setCache(prev => { const n = { ...prev, [item.name]: item }; saveCache('cloth', category, n); return n; });
+      setSelected(item);
+      setDetailLoading(false);
+    }).catch(() => { setDetailError('Failed to load item.'); setDetailLoading(false); });
+  };
+
+  const closeModal = () => { setSelected(null); setDetailLoading(false); setDetailError(null); };
 
   const toggle = (key, setter, name, e) => {
     if (e) e.stopPropagation();
@@ -154,7 +149,7 @@ export default function CatalogClothing() {
       {error && <ErrorRetry message={error} onRetry={() => setRefreshKey(k => k + 1)} />}
       {loading && allNames.length === 0 ? <div className="loading-spinner"><div className="spinner"></div></div> : <>
         <CatalogGrid items={pageNames} cache={cache} owned={owned} wishlist={wishlist}
-          onSelect={n => cache[n] && setSelected(cache[n])}
+          onSelect={handleCardClick}
           onOwn={(n, e) => toggle('ct_cloth_owned', setOwned, n, e)}
           onWish={(n, e) => toggle('ct_cloth_wish', setWishlist, n, e)}
           getImg={item => item?.variations?.[0]?.image_url}
@@ -169,9 +164,13 @@ export default function CatalogClothing() {
         {totalPages > 1 && <Pagination current={page} total={totalPages} onChange={setPage} />}
       </>}
 
-      {selected && <DetailModal onClose={() => setSelected(null)}>
-        <ClothingDetail item={selected} owned={owned} wishlist={wishlist}
-          onOwn={n => toggle('ct_cloth_owned', setOwned, n)} onWish={n => toggle('ct_cloth_wish', setWishlist, n)} />
+      {(selected || detailLoading || detailError) && <DetailModal onClose={closeModal}>
+        {detailLoading
+          ? <div className="loading-spinner"><div className="spinner"></div><p style={{ marginTop: 8, fontSize: 14 }}>Loading...</p></div>
+          : detailError
+            ? <div className="ct-error"><span className="material-icons">cloud_off</span><p>{detailError}</p></div>
+            : <ClothingDetail item={selected} owned={owned} wishlist={wishlist}
+                onOwn={n => toggle('ct_cloth_owned', setOwned, n)} onWish={n => toggle('ct_cloth_wish', setWishlist, n)} />}
       </DetailModal>}
     </>
   );

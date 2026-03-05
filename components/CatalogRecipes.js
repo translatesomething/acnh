@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useMemo, useRef } from 'react';
-import { getRecipeNames, getRecipeBatch, getRecipesByMaterial } from '../lib/api';
+import { useState, useEffect, useMemo } from 'react';
+import { getRecipeNames, getRecipeItem, getRecipesByMaterial } from '../lib/api';
 import { loadSet, saveSet, loadCache, saveCache, clearCache, getBuyPrice, formatApiErrorMessage } from '../lib/catalogUtils';
 import { Pagination, DetailModal, DetailActions, ErrorRetry, SlowLoadingMessage } from './CatalogFurniture';
 
@@ -12,7 +12,6 @@ export default function CatalogRecipes() {
   const [allNames, setAllNames] = useState([]);
   const [cache, setCache] = useState(() => loadCache('recipe', 'all'));
   const [namesLoading, setNamesLoading] = useState(true);
-  const [pageDetailsLoading, setPageDetailsLoading] = useState(false);
   const [materialList, setMaterialList] = useState(null);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
@@ -24,7 +23,8 @@ export default function CatalogRecipes() {
   const [refreshKey, setRefreshKey] = useState(0);
   const [shoppingList, setShoppingList] = useState(() => loadSet('ct_recipe_shop'));
   const [showShoppingPanel, setShowShoppingPanel] = useState(false);
-  const loadingPageRef = useRef(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -83,24 +83,21 @@ export default function CatalogRecipes() {
   const pageNames = useMemo(() => filtered.slice((page - 1) * PER_PAGE, page * PER_PAGE), [filtered, page]);
   useEffect(() => { setPage(1); }, [search, materialFilter, sourceFilter]);
 
-  useEffect(() => {
-    if (materialFilter) return;
-    if (pageNames.length === 0) return;
-    const missing = pageNames.filter(n => !cache[n]);
-    if (missing.length === 0) return;
-    const pageKey = `${page}-${pageNames[0]}`;
-    if (loadingPageRef.current === pageKey) return;
-    loadingPageRef.current = pageKey;
-    setPageDetailsLoading(true);
-    getRecipeBatch(missing).then(items => {
-      const next = { ...cache };
-      items.forEach(item => { if (item?.name) next[item.name] = item; });
-      setCache(next);
-      saveCache('recipe', 'all', next);
-      setPageDetailsLoading(false);
-      loadingPageRef.current = null;
-    }).catch(() => { setPageDetailsLoading(false); loadingPageRef.current = null; });
-  }, [page, pageNames, materialFilter, cache]);
+  const handleCardClick = (name) => {
+    const cached = materialFilter ? listFromMaterial.byName[name] : cache[name];
+    if (cached) { setSelected(cached); return; }
+    setSelected(null);
+    setDetailLoading(true);
+    setDetailError(null);
+    getRecipeItem(name).then(item => {
+      if (!item) { setDetailError('Recipe not found.'); setDetailLoading(false); return; }
+      setCache(prev => { const n = { ...prev, [item.name]: item }; saveCache('recipe', 'all', n); return n; });
+      setSelected(item);
+      setDetailLoading(false);
+    }).catch(() => { setDetailError('Failed to load recipe.'); setDetailLoading(false); });
+  };
+
+  const closeModal = () => { setSelected(null); setDetailLoading(false); setDetailError(null); };
 
   const sources = useMemo(() => {
     const s = new Set();
@@ -194,7 +191,7 @@ export default function CatalogRecipes() {
       )}
 
       <div className="ct-results-bar"><span>{namesLoading && baseNames.length === 0 ? 'Loading...' : `${filtered.length} recipes`}{totalPages > 1 ? ` · Page ${page}/${totalPages}` : ''}</span></div>
-      <SlowLoadingMessage loading={(namesLoading && baseNames.length === 0) || sourceDetailsLoading} />
+      <SlowLoadingMessage loading={namesLoading && baseNames.length === 0} />
       {error && <ErrorRetry message={error} onRetry={() => setRefreshKey(k => k + 1)} />}
       {namesLoading && baseNames.length === 0 ? <div className="loading-spinner"><div className="spinner"></div></div> : <>
         <div className="ct-grid">
@@ -203,7 +200,7 @@ export default function CatalogRecipes() {
             const img = item?.image_url;
             return (
               <div key={name} className={`ct-card ${learned.has(name) ? 'owned' : ''} ${shoppingList.has(name) ? 'wishlisted' : ''}`}
-                onClick={() => item && setSelected(item)}>
+                onClick={() => handleCardClick(name)}>
                 <div className="ct-card-img-wrap">
                   {img ? <img src={img} alt={name} className="ct-card-img" loading="lazy" /> : <div className="ct-card-shimmer"><span className="material-icons">image</span></div>}
                   {learned.has(name) && <span className="ct-badge ct-badge--owned"><span className="material-icons">check_circle</span></span>}
@@ -232,10 +229,14 @@ export default function CatalogRecipes() {
         {totalPages > 1 && <Pagination current={page} total={totalPages} onChange={setPage} />}
       </>}
 
-      {selected && <DetailModal onClose={() => setSelected(null)}>
-        <RecipeDetail item={selected} learned={learned} shoppingList={shoppingList}
-          onLearn={n => toggleLearned(n)} onShop={n => toggleShoppingItem(n)}
-          onMaterialClick={m => { setSelected(null); setMaterialFilter(m); }} />
+      {(selected || detailLoading || detailError) && <DetailModal onClose={closeModal}>
+        {detailLoading
+          ? <div className="loading-spinner"><div className="spinner"></div><p style={{ marginTop: 8, fontSize: 14 }}>Loading...</p></div>
+          : detailError
+            ? <div className="ct-error"><span className="material-icons">cloud_off</span><p>{detailError}</p></div>
+            : <RecipeDetail item={selected} learned={learned} shoppingList={shoppingList}
+                onLearn={n => toggleLearned(n)} onShop={n => toggleShoppingItem(n)}
+                onMaterialClick={m => { closeModal(); setMaterialFilter(m); }} />}
       </DetailModal>}
     </>
   );

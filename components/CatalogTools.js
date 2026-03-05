@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { getToolNames, getToolBatch, getTools } from '../lib/api';
+import { getToolNames, getToolItem, getTools } from '../lib/api';
 import { loadSet, saveSet, loadCache, saveCache, getBuyPrice, formatApiErrorMessage } from '../lib/catalogUtils';
 import { DetailModal, DetailActions, ErrorRetry, Pagination, SlowLoadingMessage } from './CatalogFurniture';
 
@@ -11,7 +11,6 @@ export default function CatalogTools() {
   const [allNames, setAllNames] = useState([]);
   const [detailsCache, setDetailsCache] = useState(() => loadCache('tool', 'all'));
   const [namesLoading, setNamesLoading] = useState(true);
-  const [pageDetailsLoading, setPageDetailsLoading] = useState(false);
   const [fullItems, setFullItems] = useState(null);
   const [error, setError] = useState(null);
   const [retryKey, setRetryKey] = useState(0);
@@ -19,10 +18,12 @@ export default function CatalogTools() {
   const [showCustom, setShowCustom] = useState(false);
   const [owned, setOwned] = useState(() => loadSet('ct_tool_owned'));
   const [selected, setSelected] = useState(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState(null);
+  const loadingPageRef = useRef(null);
   const [compareMode, setCompareMode] = useState(false);
   const [compareItems, setCompareItems] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const loadingPageRef = useRef(null);
 
   // Stale-while-revalidate: show cache first
   useEffect(() => {
@@ -58,30 +59,23 @@ export default function CatalogTools() {
     return filteredNames.slice(start, start + TOOLS_PER_PAGE);
   }, [filteredNames, currentPage]);
 
-  useEffect(() => {
-    if (pageNames.length === 0) return;
-    const missing = pageNames.filter(n => !detailsCache[n]);
-    if (missing.length === 0) return;
-    const pageKey = `${currentPage}-${pageNames[0]}`;
-    if (loadingPageRef.current === pageKey) return;
-    loadingPageRef.current = pageKey;
-    let cancelled = false;
-    setPageDetailsLoading(true);
-    getToolBatch(missing).then(items => {
-      if (cancelled) return;
-      setDetailsCache(prev => {
-        const next = { ...prev };
-        items.forEach(item => { if (item?.name) next[item.name] = item; });
-        saveCache('tool', 'all', next);
-        return next;
-      });
-      setPageDetailsLoading(false);
-      loadingPageRef.current = null;
-    }).catch(() => { if (!cancelled) { setPageDetailsLoading(false); loadingPageRef.current = null; } });
-    return () => { cancelled = true; };
-  }, [currentPage, pageNames, detailsCache]);
-
   useEffect(() => { setCurrentPage(1); }, [search]);
+
+  const handleCardClick = (item) => {
+    if (!item?.name) return;
+    if (detailsCache[item.name]) { setSelected(detailsCache[item.name]); return; }
+    setSelected(null);
+    setDetailLoading(true);
+    setDetailError(null);
+    getToolItem(item.name).then(detail => {
+      if (!detail) { setDetailError('Item not found.'); setDetailLoading(false); return; }
+      setDetailsCache(prev => { const n = { ...prev, [detail.name]: detail }; saveCache('tool', 'all', n); return n; });
+      setSelected(detail);
+      setDetailLoading(false);
+    }).catch(() => { setDetailError('Failed to load item.'); setDetailLoading(false); });
+  };
+
+  const closeModal = () => { setSelected(null); setDetailLoading(false); setDetailError(null); };
 
   const displayItems = useMemo(() => {
     let list = pageNames.map(n => detailsCache[n] || { name: n });
@@ -158,10 +152,9 @@ export default function CatalogTools() {
               const img = item.variations?.[0]?.image_url;
               const price = getBuyPrice(item);
               const isComparing = compareItems.find(i => i.name === item.name);
-              const hasDetails = !!item.variations?.length;
               return (
                 <div key={item.name} className={`ct-card ${owned.has(item.name) ? 'owned' : ''} ${isComparing ? 'wishlisted' : ''}`}
-                  onClick={() => compareMode ? toggleCompare(item, { stopPropagation: () => {} }) : hasDetails && setSelected(item)}>
+                  onClick={() => compareMode ? toggleCompare(item, { stopPropagation: () => {} }) : handleCardClick(item)}>
                   <div className="ct-card-img-wrap">
                     {img ? <img src={img} alt={item.name} className="ct-card-img" loading="lazy" /> : <div className="ct-card-shimmer"><span className="material-icons">image</span></div>}
                     {owned.has(item.name) && <span className="ct-badge ct-badge--owned"><span className="material-icons">check_circle</span></span>}
@@ -222,8 +215,12 @@ export default function CatalogTools() {
         </>
       )}
 
-      {selected && <DetailModal onClose={() => setSelected(null)}>
-        <ToolDetail item={selected} owned={owned} onOwn={toggle} />
+      {(selected || detailLoading || detailError) && <DetailModal onClose={closeModal}>
+        {detailLoading
+          ? <div className="loading-spinner"><div className="spinner"></div><p style={{ marginTop: 8, fontSize: 14 }}>Loading...</p></div>
+          : detailError
+            ? <div className="ct-error"><span className="material-icons">cloud_off</span><p>{detailError}</p></div>
+            : <ToolDetail item={selected} owned={owned} onOwn={toggle} />}
       </DetailModal>}
     </>
   );
