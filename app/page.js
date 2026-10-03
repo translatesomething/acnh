@@ -5,11 +5,11 @@ import dynamic from 'next/dynamic';
 import { getVillagers } from '../lib/api';
 import { getFullGameName } from '../lib/game-mapping';
 import VillagerDetails from '../components/VillagerDetails';
-import CopyNotification from '../components/CopyNotification';
 import ThemeToggle from '../components/ThemeToggle';
 import Navigation from '../components/Navigation';
 import EventsPage from '../components/EventsPage';
 import MuseumPage from '../components/MuseumPage';
+import TodayPanel from '../components/TodayPanel';
 
 // Lazy load heavy tabs so Villagers and first paint stay fast
 const CritterpediaPage = dynamic(
@@ -59,11 +59,11 @@ export default function Home() {
   });
   const [selectedVillager, setSelectedVillager] = useState(null);
   const [showDetails, setShowDetails] = useState(false);
-  const [copyNotification, setCopyNotification] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [itemsPerPage, setItemsPerPage] = useState(12);
   const [villagerPhotos, setVillagerPhotos] = useState({}); // Cache for nh_details.photo_url
   const [villagerError, setVillagerError] = useState(null);
+  const [showFilters, setShowFilters] = useState(false);
   const isMountedRef = useRef(true);
 
   useEffect(() => {
@@ -321,6 +321,9 @@ export default function Home() {
   const hasNonDefaultGameFilter = selectedGame && selectedGame !== 'NH';
   const hasActiveFilters = searchKeyword || selectedSpecies || selectedPersonality || hasNonDefaultGameFilter || selectedGender || selectedBirthdayMonth || selectedSign || isRandomMode;
 
+  // The filter panel starts closed. The badge counts the choices that narrow the list.
+  const activeFilterCount = [selectedSpecies, selectedPersonality, hasNonDefaultGameFilter, selectedGender, selectedBirthdayMonth, selectedSign].filter(Boolean).length;
+
   const showVillagerDetails = (villager) => {
     setSelectedVillager(villager);
     setShowDetails(true);
@@ -340,46 +343,33 @@ export default function Home() {
     return villager.image_url;
   };
 
-  const copyGameName = (event, gameName) => {
-    event.stopPropagation();
-    navigator.clipboard.writeText(gameName).then(() => {
-      setCopyNotification(true);
-      setTimeout(() => setCopyNotification(false), 1500);
-    });
-  };
-
-  const getRemainingGames = (appearances) => {
-    return (appearances ?? []).slice(3)
-      .map(game => getFullGameName(game))
-      .join('\n');
-  };
-
   return (
     <>
-      <ThemeToggle />
-      <div className="acnh-header">
-        <img 
-          src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/acnh-logo.png`}
-          alt="Animal Crossing: New Horizons Logo" 
-          className="acnh-logo floating"
-        />
-      </div>
-
-      <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
+      <header className="site-header">
+        <div className="site-header-inner">
+          <button type="button" className="site-brand" onClick={() => setActiveTab('villagers')} aria-label="Animal Crossing: New Horizons, home">
+            <img src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/acnh-logo.png`} alt="" />
+          </button>
+          <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
+          <ThemeToggle />
+        </div>
+      </header>
 
       <div className="container">
         {activeTab === 'villagers' && (
-          <div className="search-container animate-search">
-          <div className="search-form">
-            <label className="search-label">
-              <span className="material-icons leaf-icon">search</span>
-              Search Villagers
-            </label>
+          <TodayPanel villagers={villagers} onSelectVillager={showVillagerDetails} />
+        )}
+
+        {activeTab === 'villagers' && (
+          <div className="finder">
+          <div className="finder-bar">
             <div className="search-input-wrapper">
+              <span className="material-icons" aria-hidden="true">search</span>
               <input
                 type="text"
                 className="search-input"
-                placeholder={isRandomMode ? "Random mode active - clear to search" : "Search by name, species, or personality..."}
+                aria-label="Search villagers by name, species or personality"
+                placeholder={isRandomMode ? "Random mode is on. Turn it off to search." : "Search villagers"}
                 value={searchKeyword}
                 onChange={(e) => {
                   setSearchKeyword(e.target.value);
@@ -402,10 +392,31 @@ export default function Home() {
                 </button>
               )}
             </div>
+            <button
+              type="button"
+              className={`finder-toggle ${showFilters ? 'active' : ''}`}
+              onClick={() => setShowFilters(open => !open)}
+              aria-expanded={showFilters}
+              aria-controls="villager-filters"
+            >
+              <span className="material-icons" aria-hidden="true">tune</span>
+              Filters
+              {activeFilterCount > 0 && <span className="finder-count">{activeFilterCount}</span>}
+            </button>
+            <button
+              type="button"
+              className={`finder-random ${isRandomMode ? 'active' : ''}`}
+              onClick={handleRandomClick}
+              title="Show 5 random villagers"
+            >
+              <span className="material-icons" aria-hidden="true">shuffle</span>
+              Random 5
+            </button>
           </div>
 
           {/* Filter Buttons */}
-          <div className="filters-section">
+          {showFilters && (
+          <div className="filters-section" id="villager-filters">
             <div className="filter-group">
               <label className="filter-label">
                 <span className="material-icons leaf-icon">pets</span>
@@ -571,23 +582,8 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="filter-group">
-              <label className="filter-label">
-                <span className="material-icons leaf-icon">shuffle</span>
-                Quick View
-              </label>
-              <div className="filter-buttons">
-                <button
-                  className={`filter-btn ${isRandomMode ? 'active' : ''}`}
-                  onClick={handleRandomClick}
-                  title="Show 5 random villagers"
-                >
-                  <span className="material-icons" style={{ fontSize: '16px', marginRight: '4px' }}>shuffle</span>
-                  Random 5
-                </button>
-              </div>
-            </div>
           </div>
+          )}
 
           {/* Active Filters & Result Count */}
           <div className="results-header">
@@ -740,51 +736,45 @@ export default function Home() {
                   {paginatedData.map((villager, index) => (
                     <div
                       key={`${villager.name}-${index}-${villager.species || ''}`}
-                      className="villager-card animate-card"
+                      className="villager-card"
+                      role="button"
+                      tabIndex={0}
+                      aria-label={`${villager.name}, show details`}
                       onClick={() => showVillagerDetails(villager)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          showVillagerDetails(villager);
+                        }
+                      }}
                     >
-                <img
-                  src={getVillagerImageUrl(villager)}
-                  alt={villager.name}
-                  className="villager-image"
-                />
+                <div className="villager-portrait">
+                  <img
+                    src={getVillagerImageUrl(villager)}
+                    alt=""
+                    className="villager-image"
+                    loading="lazy"
+                  />
+                  {villager.phrase && <p className="villager-quote">{villager.phrase}</p>}
+                </div>
                 <div className="villager-info">
                   <h3>{villager.name}</h3>
                   <p>
-                    <span className="material-icons leaf-icon">pets</span>
+                    <span className="material-icons" aria-hidden="true">pets</span>
                     {villager.species}
                   </p>
                   <p>
-                    <span className="material-icons leaf-icon">cake</span>
-                    {villager.birthday_month} {villager.birthday_day}
-                  </p>
-                  <p>
-                    <span className="material-icons leaf-icon">psychology</span>
+                    <span className="material-icons" aria-hidden="true">psychology</span>
                     {villager.personality}
                   </p>
-                  <p className="villager-quote">"{villager.phrase}"</p>
-                </div>
-                <div className="game-appearances">
-                  <div className="game-chips">
-                    {(villager.appearances ?? []).slice(0, 3).map((game, idx) => (
-                      <div
-                        key={`${villager.name}-game-${idx}-${game}`}
-                        className="game-chip"
-                        title={getFullGameName(game)}
-                        onDoubleClick={(e) => copyGameName(e, getFullGameName(game))}
-                      >
-                        <span className="game-name">{getFullGameName(game)}</span>
-                      </div>
-                    ))}
-                    {(villager.appearances?.length ?? 0) > 3 && (
-                      <div
-                        className="game-chip"
-                        title={getRemainingGames(villager.appearances)}
-                      >
-                        +{(villager.appearances?.length ?? 0) - 3} more
-                      </div>
-                    )}
-                  </div>
+                  <p>
+                    <span className="material-icons" aria-hidden="true">cake</span>
+                    {villager.birthday_month} {villager.birthday_day}
+                  </p>
+                  <p title={(villager.appearances ?? []).map(game => getFullGameName(game)).join('\n')}>
+                    <span className="material-icons" aria-hidden="true">sports_esports</span>
+                    {villager.appearances?.length ?? 0} {villager.appearances?.length === 1 ? 'game' : 'games'}
+                  </p>
                 </div>
                     </div>
                   ))}
@@ -846,9 +836,9 @@ export default function Home() {
                           className="items-per-page-select"
                           aria-label="Items per page"
                         >
-                          <option value={5}>5</option>
-                          <option value={10}>10</option>
-                          <option value={20}>20</option>
+                          <option value={8}>8</option>
+                          <option value={12}>12</option>
+                          <option value={24}>24</option>
                         </select>
                       </div>
                     </div>
@@ -881,7 +871,6 @@ export default function Home() {
           </div>
         )}
 
-        <CopyNotification show={copyNotification} onClose={() => setCopyNotification(false)} />
       </div>
     </>
   );

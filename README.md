@@ -91,9 +91,10 @@ Catalog is split into seven sections with filters, detail modals, and collection
   - Owned tracker
 
 ### General
-- Dark mode / Light mode toggle
-- Responsive design for mobile and desktop
-- Smooth animations and gradient accents
+- **Look**: modeled on the in-game Nook Phone. Light mode is the island by day, dark mode is the island by night, and the choice is remembered without a flash on load
+- **Today on the island**: the Villagers page opens with the date, today's villager birthdays and today's events
+- Responsive design: on phones the section navigation becomes a bottom tab bar and detail views become bottom sheets
+- Fonts and icons are bundled with the site, so nothing is loaded from Google
 - Persistent collection tracking via localStorage
 - **Data**: the site never calls the Nookipedia API in the browser. It reads JSON snapshots from `public/data/`, created by `npm run fetch-data` (see [Updating the data](#updating-the-data)). No API key is shipped to visitors and there are no CORS or rate-limit issues
 - **Performance**: Critterpedia and Catalog load on demand (lazy); Catalog sub-tabs (Furniture, Clothing, etc.) each load when first opened; only the active Catalog tab is kept in memory (switching tabs unmounts the previous one to reduce RAM use)
@@ -122,7 +123,12 @@ No API key is needed to run the site: all data is already in `public/data/`. A k
 ├── app/
 │   ├── layout.js          # Root layout
 │   ├── page.js            # Home page (tab routing)
-│   ├── globals.css        # Global styles
+│   ├── styles/            # Design system, one file per area
+│   │   ├── tokens.css         # Colors (day and night), type, radii, spacing
+│   │   ├── base.css           # Reset, typography, focus ring
+│   │   ├── shell.css          # Header, navigation, footer
+│   │   ├── shared.css         # Chips, tabs, search, buttons, pagination, modals
+│   │   └── villagers.css, critterpedia.css, events.css, museum.css, catalog*.css
 │   └── icon.png           # App icon/favicon
 ├── components/
 │   ├── Navigation.js          # Main navigation menu
@@ -139,7 +145,7 @@ No API key is needed to run the site: all data is already in `public/data/`. A k
 │   ├── CatalogItems.js       # Misc items with auto-grouping
 │   ├── CatalogRecipes.js     # DIY recipes + shopping list
 │   ├── CatalogPhotos.js      # Photos & posters
-│   ├── CopyNotification.js   # Copy-to-clipboard notification
+│   ├── TodayPanel.js          # Date, birthdays and events for today
 │   ├── ThemeProviderWrapper.js
 │   └── ThemeToggle.js
 ├── lib/

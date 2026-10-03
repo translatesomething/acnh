@@ -1,0 +1,624 @@
+/* Events: today banner, toolbar, the paper month calendar, the list, the day popup and the detail sheet.
+   Type colors are data (set inline per event type) and always carry white text. */
+
+.events-page {
+  padding-top: var(--s-2);
+}
+
+/* ── Today banner ──────────────────────────────────────────────────── */
+
+.ev-today-banner {
+  margin-bottom: var(--s-4);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-card);
+  background: var(--c-surface);
+  border: 2px solid var(--c-line);
+  border-left: 8px solid var(--c-accent);
+  box-shadow: var(--ledge);
+}
+
+.ev-today-header {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-bottom: var(--s-2);
+  font-family: var(--font-display);
+  font-size: var(--t-md);
+  font-weight: 600;
+}
+
+.ev-today-header .material-icons {
+  font-size: 22px;
+  color: var(--c-brand);
+}
+
+.ev-today-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.ev-today-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 40px;
+  padding: 4px var(--s-2) 4px 6px;
+  border-radius: var(--r-chip);
+  background: var(--c-inset);
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease);
+}
+
+.ev-today-item:hover {
+  border-color: var(--c-brand);
+}
+
+/* Type icons keep their data color; a surface disc keeps them legible on both themes */
+.ev-today-item > .material-icons,
+.ev-day-popup-item > .material-icons {
+  padding: 4px;
+  border-radius: 50%;
+  background: var(--c-surface);
+  font-size: 20px !important;
+}
+
+.ev-today-name {
+  font-weight: 700;
+  font-size: var(--t-sm);
+}
+
+.ev-today-type,
+.ev-list-type-badge,
+.ev-day-popup-item-type,
+.ev-detail-type-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: var(--r-chip);
+  color: #fff;
+  font-size: var(--t-xs);
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.ev-list-type-badge .material-icons,
+.ev-detail-type-badge .material-icons {
+  font-size: 15px;
+}
+
+/* ── Toolbar ───────────────────────────────────────────────────────── */
+
+.ev-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+  margin-bottom: var(--s-4);
+}
+
+.ev-view-toggle {
+  flex-shrink: 0;
+}
+
+.ev-type-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  padding-bottom: 3px; /* room for the chip ledge */
+}
+
+.ev-search-wrapper {
+  flex: 1 1 100%;
+  max-width: 420px;
+}
+
+/* ── Calendar: a paper month page ──────────────────────────────────── */
+
+.ev-calendar {
+  overflow: hidden;
+  border-radius: var(--r-card);
+  background: var(--c-surface);
+  border: 2px solid var(--c-line);
+  box-shadow: var(--ledge);
+}
+
+.ev-cal-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4);
+  background: var(--c-brand);
+  color: var(--c-on-brand);
+}
+
+.ev-cal-title {
+  flex: 1;
+  margin: 0;
+  color: inherit;
+  text-align: center;
+  font-size: var(--t-lg);
+}
+
+.ev-cal-nav-btn {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgb(255 255 255 / 0.18);
+  color: inherit;
+  transition: background-color var(--dur) var(--ease), transform var(--dur) var(--ease);
+}
+
+.ev-cal-nav-btn:hover {
+  background: rgb(255 255 255 / 0.32);
+}
+
+.ev-cal-nav-btn:active {
+  transform: translateY(2px);
+}
+
+.ev-cal-today-btn {
+  flex-shrink: 0;
+  min-height: 40px;
+  padding: 0 var(--s-4);
+  border-radius: var(--r-ctrl);
+  background: var(--c-accent);
+  border: 2px solid var(--c-accent-deep);
+  color: var(--c-on-accent);
+  font-family: var(--font-display);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  box-shadow: var(--ledge-accent);
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+
+.ev-cal-today-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--c-accent-deep);
+}
+
+.ev-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--c-line);
+  border-top: 2px solid var(--c-line);
+}
+
+.ev-cal-day-header {
+  padding: var(--s-2) 0;
+  background: var(--c-inset);
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  color: var(--c-ink-soft);
+}
+
+.ev-cal-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+  min-height: 112px;
+  padding: 6px;
+  background: var(--c-surface);
+  overflow: hidden;
+}
+
+.ev-cal-cell--blank {
+  background: var(--c-inset);
+  opacity: 0.55;
+}
+
+.ev-cal-cell--has-events {
+  cursor: pointer;
+}
+
+.ev-cal-cell--has-events:hover {
+  background: var(--c-inset);
+}
+
+.ev-cal-day-num {
+  align-self: flex-start;
+  display: inline-grid;
+  place-items: center;
+  min-width: 26px;
+  height: 26px;
+  padding: 0 4px;
+  font-family: var(--font-display);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  line-height: 1;
+  color: var(--c-ink-soft);
+}
+
+.ev-cal-cell--has-events .ev-cal-day-num {
+  color: var(--c-ink);
+}
+
+/* Today: the date is a pond-teal leaf, and the cell is tinted */
+.ev-cal-cell--today {
+  background: color-mix(in srgb, var(--c-brand) 14%, var(--c-surface));
+  box-shadow: inset 0 0 0 3px var(--c-brand);
+}
+
+.ev-cal-day-num.ev-today-num {
+  min-width: 30px;
+  height: 30px;
+  border-radius: 60% 6px 60% 6px;
+  background: var(--c-brand);
+  color: var(--c-on-brand);
+  font-size: var(--t-md);
+  font-weight: 700;
+}
+
+.ev-cal-events {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.ev-cal-event-dot {
+  min-width: 0;
+  padding: 0 6px;
+  border-radius: 6px;
+}
+
+.ev-cal-event-text {
+  display: block;
+  overflow: hidden;
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 20px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.ev-cal-more {
+  padding-left: 2px;
+  color: var(--c-brand);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.ev-cal-cell--today .ev-cal-more {
+  color: var(--c-brand-deep);
+}
+
+:root.dark .ev-cal-cell--today .ev-cal-more {
+  color: var(--c-brand);
+}
+
+/* ── List ──────────────────────────────────────────────────────────── */
+
+.ev-list-count {
+  margin-bottom: var(--s-3);
+  color: var(--c-ink-soft);
+  font-size: var(--t-sm);
+  font-weight: 600;
+}
+
+.ev-list-count strong {
+  color: var(--c-ink);
+  font-family: var(--font-display);
+  font-size: var(--t-md);
+}
+
+.ev-list-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: var(--s-3);
+}
+
+.ev-list-item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  min-width: 0;
+  padding: var(--s-3);
+  border-radius: var(--r-card);
+  background: var(--c-surface);
+  border: 2px solid var(--c-line);
+  box-shadow: var(--ledge);
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease);
+}
+
+.ev-list-item:hover {
+  border-color: var(--c-brand);
+}
+
+.ev-list-item--today {
+  border-color: var(--c-brand);
+  background: color-mix(in srgb, var(--c-brand) 12%, var(--c-surface));
+}
+
+.ev-list-date-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+  width: 60px;
+  padding: var(--s-1) 0;
+  border-radius: var(--r-inset);
+  background: var(--c-inset);
+  line-height: 1.1;
+}
+
+.ev-list-month {
+  color: var(--c-ink-soft);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+.ev-list-day {
+  font-family: var(--font-display);
+  font-size: var(--t-xl);
+  font-weight: 700;
+}
+
+.ev-list-year {
+  color: var(--c-ink-soft);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.ev-list-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
+  gap: 6px;
+  min-width: 0;
+}
+
+.ev-list-name {
+  font-family: var(--font-display);
+  font-size: var(--t-md);
+  font-weight: 600;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.ev-list-wiki,
+.ev-day-popup-wiki {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--c-inset);
+}
+
+.ev-list-wiki .material-icons,
+.ev-day-popup-wiki .material-icons {
+  font-size: 20px;
+}
+
+.ev-list-page-info {
+  min-width: 110px;
+  text-align: center;
+  color: var(--c-ink-soft);
+  font-weight: 700;
+}
+
+/* ── Day popup ─────────────────────────────────────────────────────── */
+
+.ev-day-modal {
+  max-width: 480px;
+}
+
+.ev-day-popup-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  padding-right: 48px;
+  font-size: var(--t-lg);
+}
+
+.ev-day-popup-title .material-icons {
+  font-size: 24px;
+  color: var(--c-brand);
+}
+
+.ev-day-popup-count {
+  display: block;
+  margin: 2px 0 var(--s-3);
+  color: var(--c-ink-soft);
+  font-weight: 700;
+  font-size: var(--t-sm);
+}
+
+.ev-day-popup-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  max-height: min(55vh, 420px);
+  overflow-y: auto;
+}
+
+.ev-day-popup-item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-inset);
+  background: var(--c-inset);
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease);
+}
+
+.ev-day-popup-item:hover {
+  border-color: var(--c-brand);
+}
+
+.ev-day-popup-item-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  flex: 1;
+  gap: 4px;
+  min-width: 0;
+}
+
+.ev-day-popup-item-name {
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.ev-day-popup-wiki {
+  background: var(--c-surface);
+}
+
+/* ── Detail sheet ──────────────────────────────────────────────────── */
+
+.ev-detail-modal {
+  max-width: 440px;
+}
+
+.ev-detail {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-3);
+  padding-right: 40px;
+}
+
+.ev-detail-type-badge {
+  padding: 5px 14px;
+  font-size: var(--t-sm);
+}
+
+.ev-detail-name {
+  font-size: var(--t-xl);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
+.ev-detail-date {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-inset);
+  background: var(--c-inset);
+  font-weight: 700;
+}
+
+.ev-detail-date .material-icons {
+  font-size: 20px;
+  color: var(--c-brand);
+}
+
+.ev-detail-today-badge {
+  padding: 2px 10px;
+  border-radius: var(--r-chip);
+  background: var(--c-brand);
+  color: var(--c-on-brand);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+.ev-detail-wiki-link {
+  gap: var(--s-2);
+  font-weight: 700;
+}
+
+.ev-detail-wiki-link .material-icons {
+  font-size: 18px;
+}
+
+/* ── Phones: the month becomes a grid of dates with colored dots ───── */
+
+@media (max-width: 760px) {
+  .ev-today-banner {
+    padding: var(--s-3);
+  }
+
+  .ev-type-filters {
+    flex-wrap: nowrap;
+    flex: 1 1 100%;
+    margin: 0 calc(-1 * var(--s-4));
+    padding: 0 var(--s-4) 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .ev-type-filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .ev-view-toggle {
+    flex: 1 1 100%;
+  }
+
+  .ev-view-btn {
+    flex: 1;
+  }
+
+  .ev-search-wrapper {
+    max-width: none;
+  }
+
+  .ev-cal-nav {
+    padding: var(--s-2) var(--s-3);
+  }
+
+  .ev-cal-title {
+    font-size: var(--t-md);
+  }
+
+  .ev-cal-cell {
+    align-items: center;
+    gap: 4px;
+    min-height: 58px;
+    padding: 4px 2px;
+  }
+
+  .ev-cal-day-num {
+    align-self: center;
+  }
+
+  .ev-cal-events {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 3px;
+  }
+
+  .ev-cal-event-dot {
+    width: 9px;
+    height: 9px;
+    padding: 0;
+    border-radius: 50%;
+    overflow: hidden;
+  }
+
+  /* The text stays in the DOM for assistive tech and tests, but is not painted */
+  .ev-cal-event-text {
+    font-size: 0;
+    line-height: 0;
+    opacity: 0;
+  }
+
+  .ev-cal-more {
+    padding: 0;
+    font-size: 0.6875rem;
+    line-height: 9px;
+  }
+
+  .ev-list-items {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

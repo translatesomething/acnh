@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { getFurnitureByCategory, getFurnitureItem, FURNITURE_CATEGORIES, FURNITURE_COLORS } from '../lib/api';
-import { loadSet, saveSet, saveCache, clearCache, getPageNumbers, getBuyPrice, formatApiErrorMessage, indexByName } from '../lib/catalogUtils';
+import { loadSet, saveSet, saveCache, getPageNumbers, getBuyPrice, formatApiErrorMessage, indexByName } from '../lib/catalogUtils';
 
 export default function CatalogFurniture() {
   const [category, setCategory] = useState('Housewares');
@@ -130,7 +130,6 @@ export default function CatalogFurniture() {
           <div className="ct-toggle-chips">
             <button className={`ct-toggle-chip ${showLucky ? 'active' : ''}`} onClick={() => setShowLucky(!showLucky)}><span className="material-icons" style={{ fontSize: 16 }}>star</span> Lucky</button>
             <button className={`ct-toggle-chip ${showCustom ? 'active' : ''}`} onClick={() => setShowCustom(!showCustom)}><span className="material-icons" style={{ fontSize: 16 }}>brush</span> Customizable</button>
-            <button className="ct-toggle-chip" onClick={() => { clearCache('fur', category); setDetailsCache({}); setRefreshKey(k => k + 1); }}><span className="material-icons" style={{ fontSize: 16 }}>refresh</span> Refresh</button>
           </div>
         </div>
       </div>
@@ -191,8 +190,8 @@ export function CatalogGrid({ items, cache, owned, wishlist, onSelect, onOwn, on
               {getExtra?.(item)}
             </div>
             <div className="ct-card-actions">
-              {onOwn && <button className={`ct-action-btn ${owned?.has(name) ? 'active' : ''}`} onClick={e => onOwn(name, e)}><span className="material-icons">{owned?.has(name) ? 'check_circle' : 'radio_button_unchecked'}</span></button>}
-              {onWish && <button className={`ct-action-btn ct-action-wish ${wishlist?.has(name) ? 'active' : ''}`} onClick={e => onWish(name, e)}><span className="material-icons">{wishlist?.has(name) ? 'favorite' : 'favorite_border'}</span></button>}
+              {onOwn && <button className={`ct-action-btn ${owned?.has(name) ? 'active' : ''}`} onClick={e => onOwn(name, e)} aria-pressed={!!owned?.has(name)}><span className="material-icons">{owned?.has(name) ? 'check_circle' : 'radio_button_unchecked'}</span><span>{owned?.has(name) ? "Owned" : "Own"}</span></button>}
+              {onWish && <button className={`ct-action-btn ct-action-wish ${wishlist?.has(name) ? 'active' : ''}`} onClick={e => onWish(name, e)} aria-pressed={!!wishlist?.has(name)}><span className="material-icons">{wishlist?.has(name) ? 'favorite' : 'favorite_border'}</span><span>{wishlist?.has(name) ? "Wished" : "Wish"}</span></button>}
             </div>
           </div>
         );

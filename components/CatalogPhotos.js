@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { getPhotos, getPhotoItem } from '../lib/api';
-import { loadSet, saveSet, saveCache, clearCache, formatApiErrorMessage, indexByName } from '../lib/catalogUtils';
+import { loadSet, saveSet, saveCache, formatApiErrorMessage, indexByName } from '../lib/catalogUtils';
 import { Pagination, DetailModal, DetailActions, ErrorRetry, SlowLoadingMessage } from './CatalogFurniture';
 
 export default function CatalogPhotos() {
@@ -94,13 +94,6 @@ export default function CatalogPhotos() {
             {categories.map(c => <button key={c} className={`ct-color-chip ${catFilter === c ? 'active' : ''}`} onClick={() => setCatFilter(c)}>{c}</button>)}
           </div>
         </div>}
-        <div className="ct-filter-row"><span className="ct-filter-label">Quick</span>
-          <div className="ct-toggle-chips">
-            <button className="ct-toggle-chip" onClick={() => { clearCache('photo', 'all'); setCache({}); setRefreshKey(k => k + 1); }}>
-              <span className="material-icons" style={{ fontSize: 16 }}>refresh</span> Refresh
-            </button>
-          </div>
-        </div>
       </div>
 
       <div className="ct-results-bar"><span>{loading && allNames.length === 0 ? 'Loading...' : `${filtered.length} items`}{totalPages > 1 ? ` · Page ${page}/${totalPages}` : ''}</span></div>

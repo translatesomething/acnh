@@ -8,13 +8,14 @@ const MONTH_NAMES = ['January','February','March','April','May','June',
 const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const DAY_LABELS  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 
+// Data colors: mid-depth hues that carry white text (4.5:1 or better) and read on both the paper and the night surface.
 const TYPE_ICONS = {
-  'Birthday':        { icon: 'cake',          color: '#e91e63' },
-  'Event':           { icon: 'celebration',   color: '#ff9800' },
-  'Nook Shopping':   { icon: 'shopping_bag',  color: '#4caf50' },
-  'Recipes':         { icon: 'menu_book',     color: '#2196f3' },
-  'Season':          { icon: 'park',          color: '#8bc34a' },
-  'Shopping season': { icon: 'storefront',    color: '#9c27b0' },
+  'Birthday':        { icon: 'cake',          color: '#c2375a' },
+  'Event':           { icon: 'celebration',   color: '#b35a05' },
+  'Nook Shopping':   { icon: 'shopping_bag',  color: '#2f7d46' },
+  'Recipes':         { icon: 'menu_book',     color: '#2b6ea8' },
+  'Season':          { icon: 'park',          color: '#587a14' },
+  'Shopping season': { icon: 'storefront',    color: '#7a479c' },
 };
 
 function pad(n) { return String(n).padStart(2, '0'); }
@@ -119,7 +120,7 @@ export default function EventsPage() {
   };
   const goToday = () => { setViewYear(now.getFullYear()); setViewMonth(now.getMonth()); };
 
-  const typeInfo = (type) => TYPE_ICONS[type] || { icon: 'event', color: '#607d8b' };
+  const typeInfo = (type) => TYPE_ICONS[type] || { icon: 'event', color: '#566b78' };
 
   // ── Pagination for list ─────────────────────────────────────────
   const [listPage, setListPage] = useState(1);

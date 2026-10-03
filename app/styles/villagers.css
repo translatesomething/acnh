@@ -1,0 +1,674 @@
+/* Villagers: today on the island, the finder, the villager cards and the detail sheet. */
+
+/* ── Today on the island ───────────────────────────────────────────── */
+
+.today {
+  display: grid;
+  grid-template-columns: minmax(150px, 190px) 1fr 1fr;
+  gap: var(--s-4);
+  margin-bottom: var(--s-5);
+}
+
+.today--pending {
+  display: block;
+  min-height: 168px;
+}
+
+.today-date {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: var(--s-4) var(--s-5);
+  border-radius: var(--r-card);
+  background: var(--c-brand);
+  color: var(--c-on-brand);
+  box-shadow: var(--ledge-brand);
+}
+
+.today-weekday {
+  font-family: var(--font-display);
+  font-size: var(--t-md);
+  font-weight: 600;
+}
+
+.today-daynum {
+  font-family: var(--font-display);
+  font-size: 4.5rem;
+  font-weight: 700;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+}
+
+.today-month {
+  font-size: var(--t-sm);
+  font-weight: 700;
+  opacity: 0.92;
+}
+
+.today-card {
+  padding: var(--s-4) var(--s-5);
+  border-radius: var(--r-card);
+  background: var(--c-surface);
+  border: 2px solid var(--c-line);
+  box-shadow: var(--ledge);
+}
+
+.today-title {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-bottom: var(--s-3);
+  font-size: var(--t-md);
+}
+
+.today-title .material-icons {
+  font-size: 22px;
+  color: var(--c-brand);
+}
+
+.today-empty {
+  max-width: 46ch;
+  color: var(--c-ink-soft);
+  font-weight: 600;
+}
+
+.today-people {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  list-style: none;
+}
+
+.today-person {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 40px;
+  padding: 4px 14px 4px 4px;
+  border-radius: var(--r-chip);
+  background: var(--c-inset);
+  border: 2px solid transparent;
+  font-weight: 700;
+  transition: border-color var(--dur) var(--ease);
+}
+
+.today-person:hover {
+  border-color: var(--c-brand);
+}
+
+.today-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--c-surface);
+}
+
+.today-more {
+  align-self: center;
+  color: var(--c-ink-soft);
+  font-weight: 600;
+}
+
+.today-events {
+  list-style: none;
+}
+
+.today-events li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-2) 0;
+}
+
+.today-events li + li {
+  border-top: 2px dashed var(--c-line);
+}
+
+.today-event-name {
+  font-weight: 700;
+}
+
+.today-event-type {
+  flex-shrink: 0;
+  padding: 2px var(--s-3);
+  border-radius: var(--r-chip);
+  background: var(--c-inset);
+  color: var(--c-ink-soft);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+@media (max-width: 900px) {
+  .today {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .today-date {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: var(--s-3);
+    padding: var(--s-3) var(--s-5);
+  }
+
+  .today-daynum {
+    font-size: 2.75rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .today {
+    grid-template-columns: 1fr;
+    gap: var(--s-2);
+    margin-bottom: var(--s-4);
+  }
+
+  .today-card {
+    padding: var(--s-3) var(--s-4);
+  }
+
+  .today-title {
+    margin-bottom: var(--s-2);
+  }
+}
+
+/* ── Finder: search, filters, results ──────────────────────────────── */
+
+.finder {
+  margin-bottom: var(--s-5);
+}
+
+.finder-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+}
+
+.finder-bar .search-input-wrapper {
+  flex: 1 1 280px;
+}
+
+.finder-toggle,
+.finder-random {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: 46px;
+  padding: 0 var(--s-4);
+  border-radius: var(--r-ctrl);
+  background: var(--c-surface);
+  border: 2px solid var(--c-line);
+  color: var(--c-ink);
+  font-family: var(--font-display);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  box-shadow: var(--ledge);
+  transition:
+    transform var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
+}
+
+.finder-toggle:hover,
+.finder-random:hover {
+  border-color: var(--c-brand);
+}
+
+.finder-toggle:active,
+.finder-random:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--c-line);
+}
+
+.finder-toggle.active,
+.finder-random.active {
+  background: var(--c-brand);
+  border-color: var(--c-brand-deep);
+  color: var(--c-on-brand);
+  box-shadow: var(--ledge-brand);
+}
+
+.finder-toggle .material-icons,
+.finder-random .material-icons {
+  font-size: 20px;
+}
+
+.finder-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: var(--r-chip);
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+  font-family: var(--font-body);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+.filters-section {
+  display: grid;
+  gap: var(--s-4);
+  margin-top: var(--s-3);
+  padding: var(--s-4) var(--s-5);
+  border-radius: var(--r-card);
+  background: var(--c-surface);
+  border: 2px solid var(--c-line);
+}
+
+.filter-label {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-bottom: var(--s-2);
+  font-family: var(--font-display);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+.filter-label .material-icons {
+  font-size: 20px;
+  color: var(--c-brand);
+}
+
+.filter-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.active-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-bottom: var(--s-2);
+}
+
+.finder .results-header {
+  margin-bottom: var(--s-3);
+}
+
+/* ── Villager cards ────────────────────────────────────────────────── */
+
+.grid-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: var(--s-4);
+}
+
+.villager-card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+  padding: var(--s-3);
+  border-radius: var(--r-card);
+  background: var(--c-surface);
+  border: 2px solid var(--c-line);
+  box-shadow: var(--ledge);
+  cursor: pointer;
+  transition:
+    transform var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
+}
+
+.villager-card:hover {
+  border-color: var(--c-brand);
+}
+
+.villager-card:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--c-line);
+}
+
+.villager-portrait {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: var(--r-inset);
+  background: var(--c-inset);
+  overflow: hidden;
+}
+
+.villager-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* The catchphrase, as a speech bubble pinned to the portrait */
+.villager-quote {
+  position: absolute;
+  top: var(--s-2);
+  left: var(--s-2);
+  max-width: calc(100% - 2 * var(--s-2));
+  padding: 3px var(--s-3);
+  border-radius: 14px 14px 14px 4px;
+  background: var(--c-ink);
+  color: var(--c-surface);
+  font-family: var(--font-display);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  line-height: 1.35;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.villager-info {
+  display: grid;
+  gap: 2px;
+  padding: 0 var(--s-1);
+}
+
+.villager-info h3 {
+  margin-bottom: var(--s-1);
+  font-size: var(--t-lg);
+}
+
+.villager-info p {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  color: var(--c-ink-soft);
+  font-weight: 600;
+}
+
+.villager-info p .material-icons {
+  font-size: 18px;
+  color: var(--c-brand);
+}
+
+/* Two cards across on a phone */
+@media (max-width: 560px) {
+  .grid-layout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--s-3);
+  }
+
+  .villager-card {
+    padding: var(--s-2);
+    gap: var(--s-2);
+  }
+
+  .villager-info h3 {
+    font-size: var(--t-md);
+  }
+
+  .villager-info p {
+    font-size: var(--t-xs);
+  }
+
+}
+
+/* ── Villager detail sheet ─────────────────────────────────────────── */
+
+.vd-hero {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  margin-bottom: var(--s-4);
+  padding-right: 48px;
+}
+
+.vd-hero-img {
+  flex-shrink: 0;
+  width: 112px;
+  height: 112px;
+  padding: var(--s-2);
+  border-radius: var(--r-card);
+  background: var(--c-inset);
+  object-fit: contain;
+}
+
+.vd-hero-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.vd-name {
+  margin-bottom: var(--s-2);
+  font-size: var(--t-xl);
+  font-weight: 700;
+}
+
+.vd-species-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px var(--s-3);
+  border-radius: var(--r-chip);
+  background: var(--c-brand);
+  color: var(--c-on-brand);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+.vd-species-badge .material-icons {
+  font-size: 14px;
+}
+
+.vd-quote {
+  display: inline-block;
+  margin-top: var(--s-3);
+  padding: var(--s-1) var(--s-3);
+  border-radius: 14px 14px 14px 4px;
+  background: var(--c-ink);
+  color: var(--c-surface);
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+
+.vd-tabs {
+  margin-bottom: var(--s-4);
+}
+
+.vd-props-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--s-2);
+  margin-bottom: var(--s-4);
+}
+
+.vd-prop {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-3);
+  border-radius: var(--r-inset);
+  background: var(--c-inset);
+}
+
+.vd-prop .material-icons {
+  font-size: 22px;
+  color: var(--c-brand);
+}
+
+.vd-prop-label {
+  display: block;
+  color: var(--c-ink-soft);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+.vd-prop-value {
+  display: block;
+  font-weight: 700;
+}
+
+.vd-section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-bottom: var(--s-2);
+  font-size: var(--t-sm);
+}
+
+.vd-section-title .material-icons {
+  font-size: 18px;
+  color: var(--c-brand);
+}
+
+.vd-games-section,
+.vd-prev-phrases,
+.vd-fav-section,
+.vd-nh-images,
+.vd-nh-quote {
+  margin-bottom: var(--s-4);
+}
+
+.vd-fav-group {
+  margin-bottom: var(--s-3);
+}
+
+.vd-game-chips,
+.vd-phrase-chips,
+.vd-fav-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.vd-game-chip {
+  padding: 3px var(--s-3);
+  border-radius: var(--r-chip);
+  background: var(--c-inset);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color var(--dur) var(--ease);
+}
+
+.vd-game-chip:hover {
+  background: var(--c-line);
+}
+
+.vd-phrase-chip {
+  padding: 3px var(--s-3);
+  border-radius: var(--r-inset);
+  border: 2px dashed var(--c-line);
+  color: var(--c-ink-soft);
+  font-size: var(--t-xs);
+  font-style: italic;
+  font-weight: 600;
+}
+
+.vd-fav-chip {
+  padding: 3px var(--s-3);
+  border-radius: var(--r-chip);
+  border: 2px solid transparent;
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+.vd-fav-chip--style {
+  border-color: var(--c-info);
+  background: color-mix(in srgb, var(--c-info) 16%, transparent);
+}
+
+.vd-fav-chip--color {
+  border-color: var(--c-love);
+  background: color-mix(in srgb, var(--c-love) 16%, transparent);
+}
+
+.vd-nh-images {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-4);
+}
+
+.vd-nh-icon {
+  width: 64px;
+  height: 64px;
+  padding: var(--s-1);
+  border-radius: var(--r-inset);
+  background: var(--c-inset);
+  object-fit: contain;
+}
+
+.vd-nh-photo {
+  width: 104px;
+  height: 104px;
+  padding: var(--s-1);
+  border-radius: var(--r-card);
+  background: var(--c-inset);
+  object-fit: contain;
+}
+
+.vd-nh-quote {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+  padding: var(--s-3) var(--s-4);
+  border-left: 4px solid var(--c-brand);
+  border-radius: 0 var(--r-inset) var(--r-inset) 0;
+  background: var(--c-inset);
+}
+
+.vd-nh-quote .material-icons {
+  font-size: 20px;
+  color: var(--c-brand);
+}
+
+.vd-nh-quote p {
+  font-weight: 600;
+}
+
+.vd-house-images {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--s-4);
+  margin-bottom: var(--s-4);
+}
+
+.vd-house-img-wrap {
+  text-align: center;
+}
+
+.vd-house-img {
+  width: 100%;
+  max-width: 300px;
+  border-radius: var(--r-card);
+  border: 2px solid var(--c-line);
+}
+
+@media (max-width: 560px) {
+  .vd-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    padding-right: 0;
+    padding-top: var(--s-5);
+  }
+
+  .vd-hero-img {
+    width: 96px;
+    height: 96px;
+  }
+
+  .vd-props-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .vd-prop {
+    gap: var(--s-2);
+    padding: var(--s-2) var(--s-3);
+  }
+
+  .vd-tab {
+    padding: 0 var(--s-3);
+  }
+
+  .vd-tab .material-icons {
+    display: none;
+  }
+}

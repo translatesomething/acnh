@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { getClothingByCategory, getClothingItem, CLOTHING_CATEGORIES, CLOTHING_STYLES, CLOTHING_LABEL_THEMES, FURNITURE_COLORS } from '../lib/api';
-import { loadSet, saveSet, saveCache, clearCache, getBuyPrice, formatApiErrorMessage, indexByName } from '../lib/catalogUtils';
+import { loadSet, saveSet, saveCache, getBuyPrice, formatApiErrorMessage, indexByName } from '../lib/catalogUtils';
 import { CatalogGrid, Pagination, DetailModal, DetailActions, ErrorRetry, SlowLoadingMessage } from './CatalogFurniture';
 
 export default function CatalogClothing() {
@@ -133,9 +133,6 @@ export default function CatalogClothing() {
           <div className="ct-toggle-chips">
             <button className={`ct-toggle-chip ${showVillEquip ? 'active' : ''}`} onClick={() => setShowVillEquip(!showVillEquip)}>
               <span className="material-icons" style={{ fontSize: 16 }}>people</span> Villager Wearable
-            </button>
-            <button className="ct-toggle-chip" onClick={() => { clearCache('cloth', category); setCache({}); setRefreshKey(k => k + 1); }}>
-              <span className="material-icons" style={{ fontSize: 16 }}>refresh</span> Refresh
             </button>
           </div>
         </div>

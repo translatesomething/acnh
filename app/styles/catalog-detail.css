@@ -1,0 +1,523 @@
+/* Catalog detail sheets and special panels. Built on tokens.css and shared.css. */
+
+/* ── Sheet content ──────────────────────────────────────────────────── */
+
+.ct-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.ct-detail h4 {
+  margin: 0 0 var(--s-2);
+  font-family: var(--font-display);
+  font-size: var(--t-md);
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+/* Hero: big inset image, name and badges beside it */
+.ct-detail-hero {
+  display: grid;
+  grid-template-columns: 148px minmax(0, 1fr);
+  align-items: center;
+  gap: var(--s-4);
+  padding-right: 44px; /* room for the close button */
+}
+
+.ct-detail-hero:not(:has(.ct-detail-img)) { grid-template-columns: minmax(0, 1fr); }
+
+.ct-detail-img {
+  width: 148px;
+  height: 148px;
+  padding: var(--s-3);
+  object-fit: contain;
+  background: var(--c-inset);
+  border-radius: var(--r-inset);
+}
+
+.ct-detail-hero-info { min-width: 0; }
+
+.ct-detail-hero-info h2 {
+  margin: 0 0 var(--s-1);
+  font-family: var(--font-display);
+  font-size: var(--t-xl);
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--c-ink);
+  text-transform: capitalize;
+  overflow-wrap: anywhere;
+}
+
+.ct-detail-series,
+.ct-detail-set {
+  display: inline-block;
+  margin-right: var(--s-3);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  color: var(--c-ink-soft);
+}
+
+.ct-detail-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-top: var(--s-3);
+}
+
+.ct-detail-cat-badge,
+.ct-detail-lucky-badge,
+.ct-detail-door-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  min-height: 28px;
+  padding: 0 var(--s-3);
+  border-radius: var(--r-chip);
+  border: 2px solid var(--c-line);
+  background: var(--c-inset);
+  color: var(--c-ink);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+.ct-detail-lucky-badge { border-color: var(--c-accent-deep); }
+.ct-detail-lucky-badge .material-icons { color: var(--c-accent-deep); }
+
+.ct-detail-door-badge { border-color: var(--c-ok); }
+
+.ct-detail-lucky-badge .material-icons,
+.ct-detail-door-badge .material-icons { font-size: 16px; }
+
+.ct-detail-door-badge .material-icons { color: var(--c-ok); }
+
+/* ── Variations ─────────────────────────────────────────────────────── */
+
+.ct-var-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: var(--s-2);
+  max-height: 232px;
+  overflow-y: auto;
+  padding: 3px;
+}
+
+.ct-var-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-1);
+  min-width: 0;
+  padding: var(--s-2);
+  border-radius: var(--r-inset);
+  border: 2px solid transparent;
+  background: var(--c-inset);
+  color: var(--c-ink-soft);
+  font-family: var(--font-body);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  cursor: pointer;
+}
+
+.ct-var-item img {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+}
+
+.ct-var-item span {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.ct-var-item:hover { border-color: var(--c-brand); }
+
+.ct-var-item.active {
+  border-color: var(--c-brand);
+  background: var(--c-surface);
+  color: var(--c-ink);
+  box-shadow: var(--ledge-brand);
+}
+
+/* ── Facts: label/value tiles ───────────────────────────────────────── */
+
+.ct-detail-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--s-2);
+}
+
+.ct-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: var(--s-3);
+  border-radius: var(--r-inset);
+  background: var(--c-inset);
+}
+
+.ct-info-wide { grid-column: 1 / -1; }
+
+.ct-info-label {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  color: var(--c-ink-soft);
+}
+
+.ct-info-item > span:nth-child(2) {
+  font-size: var(--t-sm);
+  font-weight: 700;
+  color: var(--c-ink);
+  overflow-wrap: anywhere;
+}
+
+.ct-info-sub {
+  font-size: var(--t-xs);
+  font-weight: 600;
+  color: var(--c-ink-soft);
+}
+
+.ct-info-item .ct-theme-chips { margin-top: var(--s-1); }
+
+/* Themes, styles, colors */
+.ct-theme-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.ct-theme-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 0 var(--s-3);
+  border-radius: var(--r-chip);
+  border: 2px solid var(--c-line);
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+.ct-theme-chip--label {
+  border-color: var(--c-accent-deep);
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+}
+
+.ct-detail-colors .ct-theme-chip { background: var(--c-inset); }
+
+/* ── Availability ───────────────────────────────────────────────────── */
+
+.ct-avail-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.ct-avail-item {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-inset);
+  background: var(--c-inset);
+  font-size: var(--t-sm);
+  font-weight: 700;
+  color: var(--c-ink);
+}
+
+.ct-avail-item .material-icons {
+  flex: none;
+  font-size: 20px;
+  color: var(--c-info);
+}
+
+/* ── Actions ────────────────────────────────────────────────────────── */
+
+.ct-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3);
+  padding-top: var(--s-4);
+  border-top: 2px solid var(--c-line);
+}
+
+/* Secondary: the wishlist button sits on the inset, not in yellow */
+.ct-detail-wish-btn {
+  background: var(--c-inset);
+  border-color: var(--c-line);
+  color: var(--c-ink);
+  box-shadow: var(--ledge);
+}
+
+.ct-detail-wish-btn:hover { border-color: var(--c-love); filter: none; }
+.ct-detail-wish-btn .material-icons { color: var(--c-love); }
+
+.ct-detail-wish-btn.active {
+  background: var(--c-love);
+  border-color: var(--c-love);
+  color: var(--c-surface);
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--c-love) 65%, black);
+}
+
+.ct-detail-wish-btn.active .material-icons { color: inherit; }
+
+/* Done state of the primary (owned, learned): leaf outline instead of yellow */
+.ct-detail-action-btn.active:not(.ct-detail-wish-btn) {
+  background: var(--c-surface);
+  border-color: var(--c-ok);
+  color: var(--c-ink);
+  box-shadow: 0 3px 0 var(--c-ok);
+}
+
+.ct-detail-action-btn.active:not(.ct-detail-wish-btn) .material-icons { color: var(--c-ok); }
+
+.ct-wiki-link { min-height: 44px; padding: 0 var(--s-2); }
+.ct-wiki-link .material-icons { font-size: 18px; }
+
+/* ── Tool durability ────────────────────────────────────────────────── */
+
+.ct-durability {
+  padding: var(--s-3);
+  border-radius: var(--r-inset);
+  background: var(--c-inset);
+}
+
+.ct-durability h4 { margin-bottom: var(--s-2); font-size: var(--t-sm); }
+
+.ct-durability-bar {
+  height: 14px;
+  overflow: hidden;
+  border-radius: var(--r-chip);
+  border: 2px solid var(--c-line);
+  background: var(--c-surface);
+}
+
+.ct-durability-fill {
+  height: 100%;
+  border-radius: var(--r-chip);
+  background: var(--c-brand);
+}
+
+.ct-durability-label {
+  display: block;
+  margin-top: var(--s-1);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  color: var(--c-ink-soft);
+  text-align: right;
+}
+
+/* ── Tool comparison ────────────────────────────────────────────────── */
+
+.ct-compare-table-wrap {
+  margin-top: var(--s-5);
+  padding: var(--s-4);
+  overflow-x: auto;
+  border-radius: var(--r-card);
+  border: 2px solid var(--c-line);
+  background: var(--c-surface);
+  box-shadow: var(--ledge);
+}
+
+.ct-compare-table-wrap h3 {
+  margin: 0 0 var(--s-3);
+  font-family: var(--font-display);
+  font-size: var(--t-lg);
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+.ct-compare-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--t-sm);
+}
+
+.ct-compare-table th,
+.ct-compare-table td {
+  padding: var(--s-2) var(--s-3);
+  text-align: center;
+  border-bottom: 2px solid var(--c-line);
+  color: var(--c-ink);
+  font-weight: 700;
+}
+
+.ct-compare-table tbody tr:last-child td { border-bottom: 0; }
+
+.ct-compare-table th {
+  background: var(--c-inset);
+  font-family: var(--font-display);
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.ct-compare-table th:first-child { border-top-left-radius: var(--r-inset); }
+.ct-compare-table th:last-child { border-top-right-radius: var(--r-inset); }
+
+.ct-compare-table td:first-child,
+.ct-compare-table th:first-child {
+  position: sticky;
+  left: 0;
+  text-align: left;
+  color: var(--c-ink-soft);
+  background: var(--c-surface);
+}
+
+.ct-compare-table th:first-child { background: var(--c-inset); }
+
+.ct-compare-table img { display: inline-block; vertical-align: middle; }
+
+.ct-compare-suggest {
+  margin-top: var(--s-4);
+  padding: var(--s-4);
+  border-radius: var(--r-inset);
+  border: 2px dashed var(--c-line);
+  background: var(--c-surface);
+  color: var(--c-ink-soft);
+  font-size: var(--t-sm);
+  font-weight: 600;
+}
+
+.ct-compare-suggest p { margin: 0 0 var(--s-2); }
+
+/* ── Recipe materials ───────────────────────────────────────────────── */
+
+.ct-recipe-mats {
+  padding: var(--s-3);
+  border-radius: var(--r-inset);
+  background: var(--c-inset);
+}
+
+.ct-recipe-mat-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.ct-recipe-mat-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 40px;
+  padding: 0 var(--s-2) 0 var(--s-3);
+  border-radius: var(--r-chip);
+  border: 2px solid var(--c-line);
+  background: var(--c-surface);
+  color: var(--c-ink);
+  font-family: var(--font-body);
+  font-size: var(--t-sm);
+  cursor: pointer;
+  box-shadow: var(--ledge);
+}
+
+.ct-recipe-mat-item:hover { border-color: var(--c-brand); }
+.ct-recipe-mat-item:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--c-line); }
+
+.ct-recipe-mat-name { font-weight: 700; }
+
+.ct-recipe-mat-count {
+  min-width: 28px;
+  padding: 1px var(--s-2);
+  border-radius: var(--r-chip);
+  background: var(--c-brand);
+  color: var(--c-on-brand);
+  font-family: var(--font-display);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  text-align: center;
+}
+
+/* ── Shopping list panel ────────────────────────────────────────────── */
+
+.ct-shopping-panel {
+  margin-bottom: var(--s-4);
+  padding: var(--s-4);
+  border-radius: var(--r-card);
+  border: 2px solid var(--c-line);
+  background: var(--c-surface);
+  box-shadow: var(--ledge);
+}
+
+.ct-shopping-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-bottom: var(--s-3);
+}
+
+.ct-shopping-header h4 {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--t-md);
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+.ct-shopping-header h4 .material-icons { font-size: 22px; color: var(--c-accent-deep); }
+
+.ct-shopping-mats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: var(--s-2);
+}
+
+.ct-shopping-mat-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-inset);
+  background: var(--c-inset);
+  font-size: var(--t-sm);
+}
+
+.ct-shopping-mat-name { min-width: 0; font-weight: 700; color: var(--c-ink); overflow-wrap: anywhere; }
+
+.ct-shopping-mat-count {
+  font-family: var(--font-display);
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+.ct-shopping-empty {
+  margin: 0;
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--c-ink-soft);
+}
+
+/* ── Phones: bottom sheet content ───────────────────────────────────── */
+
+@media (max-width: 760px) {
+  .ct-detail-hero {
+    grid-template-columns: 112px minmax(0, 1fr);
+    gap: var(--s-3);
+  }
+
+  .ct-detail-img { width: 112px; height: 112px; padding: var(--s-2); }
+  .ct-detail-hero-info h2 { font-size: var(--t-lg); }
+
+  .ct-var-grid { grid-template-columns: repeat(auto-fill, minmax(72px, 1fr)); max-height: 200px; }
+
+  .ct-detail-actions { gap: var(--s-2); }
+  .ct-detail-actions .ct-detail-action-btn { flex: 1 1 100%; }
+  .ct-wiki-link { flex: 1 1 100%; justify-content: center; }
+
+  .ct-compare-table th,
+  .ct-compare-table td { padding: var(--s-2); font-size: var(--t-xs); }
+
+  .ct-shopping-mats { grid-template-columns: 1fr; }
+}

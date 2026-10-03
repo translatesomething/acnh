@@ -1,0 +1,701 @@
+/*
+ * Shared controls.
+ *
+ * One recipe per kind of control, applied to every class that plays that role,
+ * whichever section it lives in. Section files add layout and content styling,
+ * not new looks for these controls.
+ *
+ * The signature: controls sit on a solid ledge and press down when you tap them.
+ */
+
+/* ── Press: the one interaction every tactile control shares ───────── */
+
+.filter-btn,
+.ct-color-chip,
+.ct-toggle-chip,
+.mu-chip,
+.ev-type-chip,
+.critter-location-chip,
+.pagination-btn,
+.pagination-number,
+.ct-page-btn,
+.ct-page-num,
+.mu-page-btn,
+.mu-page-num,
+.clear-filters-btn,
+.ct-clear-btn,
+.ct-error-retry,
+.ct-detail-action-btn,
+.mu-donate-action,
+.close-button,
+.ct-modal-close,
+.mu-modal-close {
+  transition:
+    transform var(--dur) var(--ease),
+    box-shadow var(--dur) var(--ease),
+    background-color var(--dur) var(--ease),
+    border-color var(--dur) var(--ease);
+}
+
+.filter-btn:active:not(:disabled),
+.ct-color-chip:active,
+.ct-toggle-chip:active,
+.mu-chip:active,
+.ev-type-chip:active,
+.critter-location-chip:active,
+.pagination-btn:active:not(:disabled),
+.pagination-number:active,
+.ct-page-btn:active:not(:disabled),
+.ct-page-num:active,
+.mu-page-btn:active:not(:disabled),
+.mu-page-num:active,
+.clear-filters-btn:active,
+.ct-clear-btn:active,
+.ct-error-retry:active,
+.ct-detail-action-btn:active,
+.mu-donate-action:active,
+.close-button:active,
+.ct-modal-close:active,
+.mu-modal-close:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--c-line);
+}
+
+/* ── Chips: filter toggles ─────────────────────────────────────────── */
+
+.filter-btn,
+.ct-color-chip,
+.ct-toggle-chip,
+.mu-chip,
+.ev-type-chip,
+.critter-location-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: var(--r-chip);
+  background: var(--c-surface);
+  border: 2px solid var(--c-line);
+  color: var(--c-ink);
+  font-family: var(--font-body);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: var(--ledge);
+}
+
+.filter-btn:hover:not(:disabled),
+.ct-color-chip:hover,
+.ct-toggle-chip:hover,
+.mu-chip:hover,
+.ev-type-chip:hover,
+.critter-location-chip:hover {
+  border-color: var(--c-brand);
+}
+
+.filter-btn.active,
+.ct-color-chip.active,
+.ct-toggle-chip.active,
+.mu-chip.active,
+.ev-type-chip.active,
+.critter-location-chip.active {
+  background: var(--c-brand);
+  border-color: var(--c-brand-deep);
+  color: var(--c-on-brand);
+  box-shadow: var(--ledge-brand);
+}
+
+.filter-btn:disabled {
+  opacity: 0.45;
+  box-shadow: none;
+}
+
+.filter-btn .material-icons,
+.ct-toggle-chip .material-icons,
+.mu-chip .material-icons,
+.ev-type-chip .material-icons {
+  font-size: 16px;
+}
+
+/* Chips that are removable summaries of a choice you made */
+.filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 32px;
+  padding: 0 6px 0 12px;
+  border-radius: var(--r-chip);
+  background: var(--c-brand);
+  color: var(--c-on-brand);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+.filter-chip button {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: inherit;
+  background: rgb(0 0 0 / 0.14);
+}
+
+.filter-chip button:hover {
+  background: rgb(0 0 0 / 0.28);
+}
+
+.filter-chip .material-icons {
+  font-size: 14px;
+}
+
+/* ── Tabs: a rail with a raised, selected tab ──────────────────────── */
+
+.ct-main-tabs,
+.ct-cat-tabs,
+.mu-tabs,
+.critter-type-tabs,
+.ev-view-toggle,
+.vd-tabs {
+  display: flex;
+  gap: var(--s-1);
+  padding: var(--s-1);
+  border-radius: var(--r-chip);
+  background: var(--c-inset);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.ct-main-tabs::-webkit-scrollbar,
+.ct-cat-tabs::-webkit-scrollbar,
+.mu-tabs::-webkit-scrollbar,
+.critter-type-tabs::-webkit-scrollbar,
+.ev-view-toggle::-webkit-scrollbar,
+.vd-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.ct-main-tab,
+.ct-cat-tab,
+.mu-tab,
+.critter-type-tab,
+.ev-view-btn,
+.vd-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: 40px;
+  padding: 0 var(--s-4);
+  border-radius: var(--r-chip);
+  color: var(--c-ink-soft);
+  font-family: var(--font-display);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  transition: background-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+
+.ct-main-tab:hover,
+.ct-cat-tab:hover,
+.mu-tab:hover,
+.critter-type-tab:hover,
+.ev-view-btn:hover,
+.vd-tab:hover {
+  color: var(--c-ink);
+}
+
+.ct-main-tab.active,
+.ct-cat-tab.active,
+.mu-tab.active,
+.critter-type-tab.active,
+.ev-view-btn.active,
+.vd-tab.active {
+  background: var(--c-surface);
+  color: var(--c-ink);
+  box-shadow: var(--ledge);
+}
+
+.ct-main-tab .material-icons,
+.ct-cat-tab .material-icons,
+.mu-tab .material-icons,
+.critter-type-tab .material-icons,
+.ev-view-btn .material-icons,
+.vd-tab .material-icons {
+  font-size: 20px;
+}
+
+/* ── Search ─────────────────────────────────────────────────────────── */
+
+.search-input-wrapper,
+.ct-search-wrap,
+.mu-search-wrap,
+.ev-search-wrapper,
+.critter-search-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.search-input-wrapper > .material-icons:first-child,
+.ct-search-wrap > .material-icons:first-child,
+.mu-search-wrap > .material-icons:first-child,
+.ev-search-wrapper > .material-icons:first-child,
+.critter-search-wrapper > .material-icons:first-child,
+.critter-search-icon {
+  position: absolute;
+  left: 14px;
+  font-size: 22px;
+  color: var(--c-ink-soft);
+  pointer-events: none;
+}
+
+.search-input,
+.ct-search,
+.mu-search,
+.ev-search,
+.critter-search {
+  width: 100%;
+  min-height: 46px;
+  padding: 0 44px 0 44px;
+  border-radius: var(--r-ctrl);
+  background: var(--c-surface);
+  border: 2px solid var(--c-line);
+  color: var(--c-ink);
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 600;
+  transition: border-color var(--dur) var(--ease);
+}
+
+.search-input::placeholder,
+.ct-search::placeholder,
+.mu-search::placeholder,
+.ev-search::placeholder,
+.critter-search::placeholder {
+  color: var(--c-ink-soft);
+  font-weight: 400;
+  opacity: 0.85;
+}
+
+.search-input:focus,
+.ct-search:focus,
+.mu-search:focus,
+.ev-search:focus,
+.critter-search:focus {
+  border-color: var(--c-brand);
+  outline: 3px solid var(--c-focus);
+  outline-offset: 1px;
+}
+
+.search-input:disabled {
+  opacity: 0.55;
+}
+
+.clear-search-btn,
+.ct-search-clear,
+.mu-search-clear,
+.ev-search-clear,
+.critter-search-clear {
+  position: absolute;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--c-inset);
+  color: var(--c-ink);
+}
+
+.clear-search-btn:hover,
+.ct-search-clear:hover,
+.mu-search-clear:hover,
+.ev-search-clear:hover,
+.critter-search-clear:hover {
+  background: var(--c-line);
+}
+
+.clear-search-btn .material-icons,
+.ct-search-clear .material-icons,
+.mu-search-clear .material-icons,
+.ev-search-clear .material-icons,
+.critter-search-clear .material-icons {
+  font-size: 18px;
+}
+
+/* ── Buttons ────────────────────────────────────────────────────────── */
+
+/* Secondary: parchment, sits on a ledge */
+.clear-filters-btn,
+.ct-clear-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: 40px;
+  padding: 0 var(--s-4);
+  border-radius: var(--r-ctrl);
+  background: var(--c-inset);
+  border: 2px solid var(--c-line);
+  color: var(--c-ink);
+  font-family: var(--font-display);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  box-shadow: var(--ledge);
+}
+
+.clear-filters-btn:hover,
+.ct-clear-btn:hover {
+  border-color: var(--c-brand);
+}
+
+.clear-filters-btn .material-icons,
+.ct-clear-btn .material-icons {
+  font-size: 18px;
+}
+
+/* Primary: bell yellow, the one color that always means "do this" */
+.ct-error-retry,
+.ct-detail-action-btn,
+.mu-donate-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  min-height: 44px;
+  padding: 0 var(--s-5);
+  border-radius: var(--r-ctrl);
+  background: var(--c-accent);
+  border: 2px solid var(--c-accent-deep);
+  color: var(--c-on-accent);
+  font-family: var(--font-display);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  box-shadow: var(--ledge-accent);
+}
+
+.ct-error-retry:hover,
+.ct-detail-action-btn:hover,
+.mu-donate-action:hover {
+  filter: brightness(1.05);
+}
+
+.ct-error-retry .material-icons,
+.ct-detail-action-btn .material-icons,
+.mu-donate-action .material-icons {
+  font-size: 20px;
+}
+
+/* Links out to the wiki */
+.ct-wiki-link,
+.mu-wiki-link,
+.ev-detail-wiki-link,
+.ev-day-popup-wiki,
+.ev-list-wiki {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--c-brand);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.ct-wiki-link:hover,
+.mu-wiki-link:hover,
+.ev-detail-wiki-link:hover,
+.ev-day-popup-wiki:hover,
+.ev-list-wiki:hover {
+  text-decoration: underline;
+}
+
+/* ── Results bar ────────────────────────────────────────────────────── */
+
+.results-header,
+.ct-results-bar,
+.mu-results-bar,
+.critter-results-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+  margin: var(--s-4) 0;
+  color: var(--c-ink-soft);
+  font-size: var(--t-sm);
+  font-weight: 600;
+}
+
+.result-count {
+  display: flex;
+  align-items: baseline;
+  gap: var(--s-2);
+}
+
+.count-number {
+  font-family: var(--font-display);
+  font-size: var(--t-lg);
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+/* ── Pagination ─────────────────────────────────────────────────────── */
+
+.pagination-controls,
+.ct-pagination,
+.mu-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  margin-top: var(--s-5);
+}
+
+.pagination-numbers,
+.ct-page-numbers,
+.mu-page-numbers {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.pagination-btn,
+.pagination-number,
+.ct-page-btn,
+.ct-page-num,
+.mu-page-btn,
+.mu-page-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 44px;
+  padding: 0 var(--s-2);
+  border-radius: var(--r-ctrl);
+  background: var(--c-surface);
+  border: 2px solid var(--c-line);
+  color: var(--c-ink);
+  font-family: var(--font-display);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  box-shadow: var(--ledge);
+}
+
+.pagination-btn:hover:not(:disabled),
+.pagination-number:hover,
+.ct-page-btn:hover:not(:disabled),
+.ct-page-num:hover,
+.mu-page-btn:hover:not(:disabled),
+.mu-page-num:hover {
+  border-color: var(--c-brand);
+}
+
+.pagination-number.active,
+.ct-page-num.active,
+.mu-page-num.active {
+  background: var(--c-brand);
+  border-color: var(--c-brand-deep);
+  color: var(--c-on-brand);
+  box-shadow: var(--ledge-brand);
+}
+
+.pagination-btn:disabled,
+.ct-page-btn:disabled,
+.mu-page-btn:disabled {
+  opacity: 0.4;
+  box-shadow: none;
+}
+
+.pagination-ellipsis,
+.ct-page-ellipsis,
+.mu-page-ellipsis {
+  min-width: 24px;
+  text-align: center;
+  color: var(--c-ink-soft);
+  font-weight: 700;
+}
+
+.items-per-page-select {
+  min-height: 44px;
+  padding: 0 var(--s-3);
+  border-radius: var(--r-ctrl);
+  background: var(--c-surface);
+  border: 2px solid var(--c-line);
+  color: var(--c-ink);
+  font-weight: 700;
+}
+
+/* ── Modals ─────────────────────────────────────────────────────────── */
+
+.modal-overlay,
+.ct-modal-overlay,
+.mu-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-4);
+  background: var(--c-scrim);
+  animation: sheet-in-bg 160ms ease-out;
+}
+
+.modal-content,
+.ct-modal,
+.mu-modal {
+  position: relative;
+  width: 100%;
+  max-height: calc(100dvh - 2 * var(--s-4));
+  overflow-y: auto;
+  padding: var(--s-5);
+  border-radius: var(--r-modal);
+  background: var(--c-surface);
+  border: 3px solid var(--c-line);
+  box-shadow: var(--shadow-modal);
+  animation: sheet-in 200ms var(--ease);
+}
+
+.modal-content { max-width: 640px; }
+.ct-modal { max-width: 720px; }
+.mu-modal { max-width: 820px; }
+.mu-modal--sm { max-width: 540px; }
+
+.close-button,
+.ct-modal-close,
+.mu-modal-close {
+  position: absolute;
+  top: var(--s-3);
+  right: var(--s-3);
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--c-inset);
+  color: var(--c-ink);
+  box-shadow: var(--ledge);
+}
+
+.close-button:hover,
+.ct-modal-close:hover,
+.mu-modal-close:hover {
+  background: var(--c-accent);
+  color: var(--c-on-accent);
+}
+
+.close-button .material-icons,
+.ct-modal-close .material-icons,
+.mu-modal-close .material-icons {
+  font-size: 22px;
+}
+
+@keyframes sheet-in-bg {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sheet-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+/* On phones a modal is a sheet that rises from the bottom edge */
+@media (max-width: 760px) {
+  .modal-overlay,
+  .ct-modal-overlay,
+  .mu-modal-overlay {
+    align-items: flex-end;
+    padding: var(--s-2) var(--s-2) 0;
+  }
+
+  .modal-content,
+  .ct-modal,
+  .mu-modal {
+    max-width: none;
+    max-height: calc(100dvh - var(--s-4));
+    padding: var(--s-4);
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+  }
+}
+
+/* ── States: loading, empty, error ──────────────────────────────────── */
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: var(--s-7) var(--s-4);
+  color: var(--c-ink-soft);
+}
+
+.spinner {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 5px solid var(--c-inset);
+  border-top-color: var(--c-brand);
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+  padding: var(--s-7) var(--s-4);
+  text-align: center;
+  color: var(--c-ink-soft);
+}
+
+.empty-icon {
+  font-size: 56px;
+  color: var(--c-line);
+}
+
+.empty-state h2 {
+  color: var(--c-ink);
+}
+
+.empty-state p {
+  max-width: 42ch;
+  margin-bottom: var(--s-3);
+}
+
+.ct-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-2);
+  margin: var(--s-4) 0;
+  padding: var(--s-5) var(--s-4);
+  border-radius: var(--r-card);
+  background: var(--c-surface);
+  border: 2px dashed var(--c-line);
+  text-align: center;
+  color: var(--c-ink-soft);
+  font-weight: 600;
+}
+
+.ct-error > .material-icons {
+  font-size: 40px;
+  color: var(--c-love);
+}
+
+.ct-slow-loading {
+  margin: var(--s-3) 0;
+  text-align: center;
+  color: var(--c-ink-soft);
+  font-size: var(--t-sm);
+}

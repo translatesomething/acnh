@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { getInteriorByCategory, getInteriorItem, INTERIOR_CATEGORIES, FURNITURE_COLORS } from '../lib/api';
-import { loadSet, saveSet, saveCache, clearCache, getBuyPrice, formatApiErrorMessage, indexByName } from '../lib/catalogUtils';
+import { loadSet, saveSet, saveCache, getBuyPrice, formatApiErrorMessage, indexByName } from '../lib/catalogUtils';
 import { CatalogGrid, Pagination, DetailModal, DetailActions, ErrorRetry, SlowLoadingMessage } from './CatalogFurniture';
 
 export default function CatalogInterior() {
@@ -113,13 +113,6 @@ export default function CatalogInterior() {
             {series.map(s => <button key={s} className={`ct-color-chip ${seriesFilter === s ? 'active' : ''}`} onClick={() => setSeriesFilter(s)}>{s}</button>)}
           </div>
         </div>}
-        <div className="ct-filter-row"><span className="ct-filter-label">Quick</span>
-          <div className="ct-toggle-chips">
-            <button className="ct-toggle-chip" onClick={() => { clearCache('int', category); setCache({}); setRefreshKey(k => k + 1); }}>
-              <span className="material-icons" style={{ fontSize: 16 }}>refresh</span> Refresh
-            </button>
-          </div>
-        </div>
       </div>
 
       <div className="ct-results-bar"><span>{loading && allNames.length === 0 ? 'Loading...' : `${filtered.length} items`}{totalPages > 1 ? ` · Page ${page}/${totalPages}` : ''}</span></div>

@@ -1,0 +1,116 @@
+/*
+ * Design tokens.
+ *
+ * The site borrows the look of the in-game Nook Phone: chunky, tactile, friendly.
+ * Light mode is the island by day. Dark mode is the island by night.
+ *
+ * Components use the role tokens (--c-*, --r-*, --s-*, --t-*), never raw colors.
+ * The named palette below exists only to define the roles.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Palette: named after what you see on the island */
+  --mint: #d6eee4;
+  --pond: #137e69;
+  --pond-deep: #0c5b4b;
+  --paper: #fff8e6;
+  --parchment: #ece1c3;
+  --parchment-deep: #cdbd8f;
+  --bark: #44382a;
+  --bark-soft: #6f604d;
+  --bell: #f4b63d;
+  --bell-deep: #bf8216;
+  --berry: #d9506c;
+  --sky: #2b86bd;
+  --leaf: #3a9459;
+
+  /* Roles, day */
+  --c-bg: var(--mint);
+  --c-header: var(--pond);
+  --c-on-header: #ffffff;
+  --c-surface: var(--paper);
+  --c-inset: var(--parchment);
+  --c-line: var(--parchment-deep);
+  --c-ink: var(--bark);
+  --c-ink-soft: var(--bark-soft);
+  --c-brand: var(--pond);
+  --c-brand-deep: var(--pond-deep);
+  --c-on-brand: #ffffff;
+  --c-accent: var(--bell);
+  --c-accent-deep: var(--bell-deep);
+  --c-on-accent: var(--bark);
+  --c-love: var(--berry);
+  --c-info: var(--sky);
+  --c-ok: var(--leaf);
+  --c-focus: #1f63c9;
+  --c-scrim: rgb(34 28 20 / 0.62);
+
+  /* Type */
+  --font-display: 'Fredoka', 'Baloo 2', ui-rounded, system-ui, sans-serif;
+  --font-body: 'Nunito Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --t-xs: 0.8125rem;
+  --t-sm: 0.9375rem;
+  --t-md: 1.0625rem;
+  --t-lg: 1.25rem;
+  --t-xl: 1.625rem;
+  --t-2xl: 2.125rem;
+
+  /* Shape: small things are round, big things are softly square */
+  --r-chip: 999px;
+  --r-ctrl: 14px;
+  --r-inset: 12px;
+  --r-card: 20px;
+  --r-modal: 26px;
+
+  /* Space */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+
+  /* Depth: tactile controls sit on a solid ledge, never a blurry shadow */
+  --ledge: 0 3px 0 var(--c-line);
+  --ledge-brand: 0 3px 0 var(--c-brand-deep);
+  --ledge-accent: 0 3px 0 var(--c-accent-deep);
+  --shadow-modal: 0 24px 48px -16px rgb(20 16 10 / 0.5);
+
+  /* Layout */
+  --page-max: 1180px;
+  --header-h: 64px;
+  --tabbar-h: 68px;
+
+  /* Motion */
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --dur: 140ms;
+}
+
+/* Night on the island */
+:root.dark {
+  color-scheme: dark;
+
+  --c-bg: #0f2a31;
+  --c-header: #0a1e24;
+  --c-on-header: #f3ead0;
+  --c-surface: #1b3a43;
+  --c-inset: #254b56;
+  --c-line: #38687a;
+  --c-ink: #f3ead0;
+  --c-ink-soft: #b9cbc5;
+  --c-brand: #4fcdb0;
+  --c-brand-deep: #2a9880;
+  --c-on-brand: #06231d;
+  --c-accent: #f6c04e;
+  --c-accent-deep: #b58214;
+  --c-on-accent: #3a2d12;
+  --c-love: #ff8ea3;
+  --c-info: #7cc7ee;
+  --c-ok: #70d18d;
+  --c-focus: #9ad3ff;
+  --c-scrim: rgb(4 12 15 / 0.76);
+  --shadow-modal: 0 24px 56px -16px rgb(0 0 0 / 0.7);
+}

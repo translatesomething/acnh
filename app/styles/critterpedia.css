@@ -1,0 +1,964 @@
+/* Critterpedia: what can I catch right now, and what am I still missing. */
+
+.critter-type-tabs {
+  width: fit-content;
+  max-width: 100%;
+  margin-bottom: var(--s-4);
+}
+
+/* ── Filter panel ──────────────────────────────────────────────────── */
+
+.critter-filter-panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-4);
+  margin-bottom: var(--s-4);
+  border-radius: var(--r-card);
+  background: var(--c-surface);
+  border: 2px solid var(--c-line);
+  box-shadow: var(--ledge);
+}
+
+.critter-filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--s-3) var(--s-5);
+}
+
+.critter-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  min-width: 0;
+}
+
+.critter-filter-group--month {
+  flex: 1 1 100%;
+}
+
+.critter-filter-label {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  color: var(--c-ink-soft);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+.critter-filter-label .material-icons {
+  font-size: 16px;
+}
+
+.critter-hemi-btns {
+  display: flex;
+  gap: var(--s-2);
+}
+
+.critter-hemi-btn,
+.critter-month-chip,
+.critter-allday-btn,
+.critter-avail-now-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: var(--r-chip);
+  background: var(--c-surface);
+  border: 2px solid var(--c-line);
+  color: var(--c-ink);
+  font-family: var(--font-body);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+  box-shadow: var(--ledge);
+}
+
+.critter-hemi-btn:hover,
+.critter-month-chip:hover,
+.critter-allday-btn:hover {
+  border-color: var(--c-brand);
+}
+
+.critter-hemi-btn:active,
+.critter-month-chip:active,
+.critter-allday-btn:active,
+.critter-avail-now-btn:active {
+  transform: translateY(3px);
+  box-shadow: none;
+}
+
+.critter-hemi-btn.active,
+.critter-month-chip.active,
+.critter-allday-btn.active {
+  background: var(--c-brand);
+  border-color: var(--c-brand-deep);
+  color: var(--c-on-brand);
+  box-shadow: var(--ledge-brand);
+}
+
+.critter-hemi-btn.active:active,
+.critter-month-chip.active:active,
+.critter-allday-btn.active:active {
+  box-shadow: none;
+}
+
+/* Available now: the one bell-yellow action in the panel */
+.critter-avail-now-btn {
+  min-height: 40px;
+  padding: 0 var(--s-4);
+  background: var(--c-accent);
+  border-color: var(--c-accent-deep);
+  color: var(--c-on-accent);
+  font-family: var(--font-display);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  box-shadow: var(--ledge-accent);
+}
+
+.critter-avail-now-btn:hover {
+  filter: brightness(1.05);
+}
+
+.critter-avail-now-btn .material-icons {
+  font-size: 20px;
+}
+
+.critter-avail-now-btn.active {
+  background: var(--c-brand);
+  border-color: var(--c-brand-deep);
+  color: var(--c-on-brand);
+  box-shadow: var(--ledge-brand);
+}
+
+.critter-avail-now-btn.active:active {
+  box-shadow: none;
+}
+
+.critter-avail-now-time {
+  font-family: var(--font-body);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+.critter-month-chips,
+.critter-location-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.critter-month-chip {
+  position: relative;
+  min-width: 52px;
+  padding: 0 10px;
+}
+
+/* Current real month: a dot plus an accent border */
+.critter-month-dot {
+  position: absolute;
+  top: 3px;
+  right: 6px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--c-accent-deep);
+}
+
+.critter-month-chip.active .critter-month-dot {
+  background: var(--c-accent);
+}
+
+.critter-month-chip.today-hint {
+  border-color: var(--c-accent-deep);
+}
+
+.critter-timetag {
+  color: var(--c-brand);
+}
+
+.critter-time-travel-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  flex-wrap: wrap;
+}
+
+.critter-hour-range {
+  flex: 1 1 160px;
+  max-width: 360px;
+  min-width: 140px;
+  height: 36px;
+  accent-color: var(--c-brand);
+}
+
+.critter-hour-display {
+  display: inline-grid;
+  place-items: center;
+  min-width: 76px;
+  min-height: 36px;
+  padding: 0 var(--s-3);
+  border-radius: var(--r-inset);
+  background: var(--c-inset);
+  color: var(--c-ink-soft);
+  font-family: var(--font-display);
+  font-size: var(--t-md);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.critter-hour-display.active {
+  background: var(--c-brand);
+  color: var(--c-on-brand);
+}
+
+/* ── Tracker bars ──────────────────────────────────────────────────── */
+
+.critter-tracker-bar {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-3);
+  margin-bottom: var(--s-2);
+}
+
+.critter-tracker-item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: var(--s-2) var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-inset);
+  background: var(--c-surface);
+  border: 2px solid var(--c-line);
+}
+
+.critter-tracker-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--c-ink-soft);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+.critter-tracker-label .material-icons {
+  font-size: 18px;
+  color: var(--c-ok);
+}
+
+.critter-tracker-label strong {
+  font-family: var(--font-display);
+  font-size: var(--t-md);
+  color: var(--c-ink);
+}
+
+.critter-tracker-pct {
+  font-family: var(--font-display);
+  font-size: var(--t-lg);
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+.critter-tracker-track {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  height: 12px;
+  border-radius: var(--r-chip);
+  background: var(--c-inset);
+  overflow: hidden;
+}
+
+.critter-tracker-fill {
+  height: 100%;
+  border-radius: var(--r-chip);
+  background: var(--c-ok);
+  transition: width 240ms var(--ease);
+}
+
+.critter-tracker-fill--donated {
+  background: var(--c-info);
+}
+
+/* ── Results bar ───────────────────────────────────────────────────── */
+
+.critter-result-count strong {
+  font-family: var(--font-display);
+  font-size: var(--t-lg);
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+.critter-clear-filters-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-height: 40px;
+  padding: 0 var(--s-4);
+  border-radius: var(--r-ctrl);
+  background: var(--c-inset);
+  border: 2px solid var(--c-line);
+  color: var(--c-ink);
+  font-family: var(--font-display);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  box-shadow: var(--ledge);
+}
+
+.critter-clear-filters-btn:hover {
+  border-color: var(--c-brand);
+}
+
+.critter-clear-filters-btn:active {
+  transform: translateY(3px);
+  box-shadow: none;
+}
+
+.critter-clear-filters-btn .material-icons {
+  font-size: 18px;
+}
+
+/* ── Grid and cards ────────────────────────────────────────────────── */
+
+.critter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--s-4);
+}
+
+.critter-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-3);
+  border-radius: var(--r-card);
+  background: var(--c-surface);
+  border: 2px solid var(--c-line);
+  box-shadow: var(--ledge);
+  cursor: pointer;
+  transition: border-color var(--dur) var(--ease);
+}
+
+.critter-card:hover {
+  border-color: var(--c-brand);
+}
+
+.critter-card-badge-row {
+  position: absolute;
+  top: calc(var(--s-3) + 8px);
+  left: calc(var(--s-3) + 8px);
+  right: calc(var(--s-3) + 8px);
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  pointer-events: none;
+}
+
+.critter-card-number {
+  color: var(--c-ink-soft);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+.critter-now-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px 3px 8px;
+  border-radius: var(--r-chip);
+  background: var(--c-ok);
+  color: var(--c-surface);
+  font-family: var(--font-display);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.critter-now-pill::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.critter-card-img {
+  display: block;
+  width: 100%;
+  height: 132px;
+  padding: var(--s-5) var(--s-3) var(--s-2);
+  object-fit: contain;
+  border-radius: var(--r-inset);
+  background: var(--c-inset);
+}
+
+.critter-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  flex: 1;
+  min-width: 0;
+  padding: 0 var(--s-1);
+}
+
+.critter-card-name {
+  font-family: var(--font-display);
+  font-size: var(--t-md);
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.critter-card-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.critter-card-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px 2px 5px;
+  border-radius: var(--r-chip);
+  background: var(--c-inset);
+  color: var(--c-ink-soft);
+  font-size: var(--t-xs);
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.critter-card-tag .material-icons {
+  font-size: 14px;
+}
+
+.critter-price-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-3);
+  color: var(--c-ink);
+  font-weight: 700;
+  font-size: var(--t-sm);
+}
+
+.critter-price-nook {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.critter-price-nook .material-icons {
+  font-size: 17px;
+  color: var(--c-ink-soft);
+}
+
+.critter-price-special {
+  color: var(--c-ink-soft);
+  font-size: var(--t-xs);
+}
+
+.critter-avail-summary {
+  margin-top: auto;
+  color: var(--c-ink-soft);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.critter-card-tracker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-2);
+  cursor: default;
+}
+
+/* Tracker buttons (card and modal) */
+.critter-tracker-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 var(--s-2);
+  border-radius: var(--r-ctrl);
+  background: var(--c-inset);
+  border: 2px solid var(--c-line);
+  color: var(--c-ink);
+  font-family: var(--font-display);
+  font-size: var(--t-xs);
+  font-weight: 600;
+  box-shadow: var(--ledge);
+}
+
+.critter-tracker-btn:hover {
+  border-color: var(--c-brand);
+}
+
+.critter-tracker-btn:active {
+  transform: translateY(3px);
+  box-shadow: none;
+}
+
+.critter-tracker-btn .material-icons {
+  font-size: 18px;
+}
+
+.critter-tracker-btn.tracker-caught {
+  background: var(--c-ok);
+  border-color: var(--c-ok);
+  color: var(--c-surface);
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--c-ok) 60%, black);
+}
+
+.critter-tracker-btn.tracker-donated {
+  background: var(--c-info);
+  border-color: var(--c-info);
+  color: var(--c-surface);
+  box-shadow: 0 3px 0 color-mix(in srgb, var(--c-info) 60%, black);
+}
+
+.critter-tracker-btn.tracker-caught:active,
+.critter-tracker-btn.tracker-donated:active {
+  box-shadow: none;
+}
+
+/* Card states: colored border, plus the check-circle buttons below */
+.critter-card--caught {
+  border-color: var(--c-ok);
+}
+
+.critter-card--donated {
+  border-color: var(--c-info);
+}
+
+.critter-card--caught.critter-card--donated {
+  border-color: var(--c-ok);
+}
+
+.critter-card--caught .critter-card-img {
+  box-shadow: inset 0 0 0 3px var(--c-ok);
+}
+
+.critter-card--donated:not(.critter-card--caught) .critter-card-img {
+  box-shadow: inset 0 0 0 3px var(--c-info);
+}
+
+/* ── Details modal ─────────────────────────────────────────────────── */
+
+.critter-details-modal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.critter-details-type-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+  padding-right: 48px;
+}
+
+.critter-details-type-badge,
+.critter-details-avail-now {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 30px;
+  padding: 0 12px 0 8px;
+  border-radius: var(--r-chip);
+  font-family: var(--font-display);
+  font-size: var(--t-xs);
+  font-weight: 600;
+}
+
+.critter-details-type-badge {
+  background: var(--c-inset);
+  color: var(--c-ink);
+}
+
+.critter-details-type-badge .material-icons {
+  font-size: 18px;
+  color: var(--c-brand);
+}
+
+.critter-details-avail-badges {
+  display: flex;
+  gap: var(--s-2);
+  flex-wrap: wrap;
+}
+
+.critter-details-avail-now {
+  background: var(--c-ok);
+  color: var(--c-surface);
+}
+
+.critter-now-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.critter-details-hero {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: var(--s-5);
+  align-items: start;
+}
+
+.critter-details-image-wrapper {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  padding: var(--s-4);
+  border-radius: var(--r-card);
+  background: var(--c-inset);
+}
+
+.critter-details-image {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.critter-details-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-width: 0;
+}
+
+.critter-details-name {
+  font-size: var(--t-xl);
+  line-height: 1.1;
+}
+
+.critter-details-tracker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-2);
+}
+
+.critter-details-tracker .critter-tracker-btn {
+  min-height: 44px;
+  font-size: var(--t-sm);
+}
+
+.critter-details-prices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.critter-price-card {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 120px;
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-inset);
+  background: var(--c-inset);
+}
+
+.critter-price-card-label {
+  color: var(--c-ink-soft);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+.critter-price-card-value {
+  font-family: var(--font-display);
+  font-size: var(--t-lg);
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+.critter-price-card-value small {
+  color: var(--c-ink-soft);
+  font-family: var(--font-body);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+.critter-details-props {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: var(--s-2);
+}
+
+.critter-detail-prop {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  column-gap: var(--s-2);
+  align-items: center;
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-inset);
+  background: var(--c-inset);
+}
+
+.critter-detail-prop .material-icons {
+  grid-row: 1 / 3;
+  font-size: 20px;
+  color: var(--c-brand);
+}
+
+.critter-detail-prop-label {
+  color: var(--c-ink-soft);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+.critter-detail-prop-value {
+  color: var(--c-ink);
+  font-size: var(--t-sm);
+  font-weight: 700;
+}
+
+.critter-catch-phrase {
+  display: flex;
+  gap: var(--s-2);
+  align-items: flex-start;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-inset);
+  background: var(--c-inset);
+  border-left: 5px solid var(--c-accent);
+}
+
+.critter-catch-phrase .material-icons {
+  color: var(--c-accent-deep);
+}
+
+.critter-catch-phrase p {
+  font-size: var(--t-md);
+  font-style: italic;
+  font-weight: 600;
+}
+
+.critter-avail-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.critter-section-title {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-size: var(--t-md);
+}
+
+.critter-section-title .material-icons {
+  color: var(--c-brand);
+  font-size: 22px;
+}
+
+.critter-hemi-avail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-3);
+  border-radius: var(--r-inset);
+  background: var(--c-inset);
+}
+
+.critter-hemi-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--s-2);
+}
+
+.critter-hemi-title {
+  font-family: var(--font-display);
+  font-size: var(--t-sm);
+  font-weight: 600;
+}
+
+.critter-hemi-time-range {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--c-ink-soft);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+.critter-hemi-time-range .material-icons {
+  font-size: 16px;
+}
+
+/* Chunky calendar tiles */
+.critter-month-chart {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px 6px;
+  padding-top: 6px;
+}
+
+.critter-month-box {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: 54px;
+  border-radius: 10px;
+  background: var(--c-surface);
+  border: 2px dashed var(--c-line);
+  color: var(--c-ink-soft);
+}
+
+.critter-month-box-label {
+  font-family: var(--font-display);
+  font-size: var(--t-sm);
+  font-weight: 600;
+}
+
+.critter-month-box-check {
+  font-size: var(--t-sm);
+  font-weight: 800;
+  line-height: 1;
+}
+
+.critter-month-box[class*='available--'] {
+  background: var(--c-brand);
+  border: 2px solid var(--c-brand-deep);
+  color: var(--c-on-brand);
+  box-shadow: var(--ledge-brand);
+}
+
+/* The current month is ringed and flagged with a bell-yellow tab */
+.critter-month-box.current-month {
+  outline: 3px solid var(--c-accent);
+  outline-offset: 2px;
+}
+
+.critter-month-box.current-month::before {
+  content: '';
+  position: absolute;
+  top: -9px;
+  left: 50%;
+  width: 16px;
+  height: 8px;
+  transform: translateX(-50%);
+  border-radius: 4px;
+  background: var(--c-accent);
+  border: 2px solid var(--c-accent-deep);
+}
+
+.critter-hemi-avail-str {
+  color: var(--c-ink-soft);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+/* ── Responsive ────────────────────────────────────────────────────── */
+
+@media (max-width: 760px) {
+  .critter-type-tabs {
+    width: 100%;
+  }
+
+  .critter-type-tab {
+    flex: 1;
+  }
+
+  .critter-filter-panel {
+    padding: var(--s-3);
+  }
+
+  /* Long chip rows become one line that scrolls sideways */
+  .critter-month-chips,
+  .critter-location-chips {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    margin-inline: calc(var(--s-3) * -1);
+    padding: 2px var(--s-3) 6px;
+  }
+
+  .critter-month-chips::-webkit-scrollbar,
+  .critter-location-chips::-webkit-scrollbar {
+    display: none;
+  }
+
+  .critter-month-chip,
+  .critter-location-chip {
+    flex-shrink: 0;
+  }
+
+  /* Caught and donated stay side by side so the cards start sooner */
+  .critter-tracker-bar {
+    gap: var(--s-2);
+  }
+
+  .critter-tracker-item {
+    padding: var(--s-2) var(--s-3);
+  }
+
+  .critter-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--s-3);
+  }
+
+  .critter-card {
+    padding: var(--s-2);
+    gap: var(--s-2);
+  }
+
+  .critter-card-badge-row {
+    top: calc(var(--s-2) + 8px);
+    left: calc(var(--s-2) + 8px);
+    right: calc(var(--s-2) + 8px);
+  }
+
+  .critter-card-img {
+    height: 104px;
+  }
+
+  .critter-card-tracker {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .critter-card-tracker .critter-tracker-btn {
+    padding: 0 4px;
+    gap: 3px;
+  }
+
+  .critter-tracker-btn {
+    min-height: 40px;
+  }
+
+  .critter-details-hero {
+    grid-template-columns: 1fr;
+    gap: var(--s-3);
+  }
+
+  .critter-details-image-wrapper {
+    width: 140px;
+    justify-self: center;
+  }
+
+  .critter-details-tracker .critter-tracker-btn {
+    min-height: 48px;
+  }
+
+  .critter-month-chart {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .critter-month-box {
+    min-height: 56px;
+  }
+}

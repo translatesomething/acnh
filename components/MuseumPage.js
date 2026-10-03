@@ -277,8 +277,8 @@ export default function MuseumPage() {
           {/* Progress bar */}
           <div className="mu-tracker">
             <div className="mu-tracker-label">
-              <span className="material-icons">emoji_events</span>
-              Art Gallery: {artDonatedCount} / {artData.length} donated
+              <span className="mu-tracker-name"><span className="material-icons">emoji_events</span>Art Gallery</span>
+              <span className="mu-tracker-count"><b>{artDonatedCount}</b> / {artData.length} donated</span>
             </div>
             <div className="mu-tracker-bar">
               <div className="mu-tracker-fill" style={{ width: artData.length ? `${(artDonatedCount / artData.length) * 100}%` : '0%' }} />
@@ -338,7 +338,7 @@ export default function MuseumPage() {
                     <div className="mu-card-body">
                       <h4 className="mu-card-title">{art.name}</h4>
                       <p className="mu-card-sub">{art.art_name}</p>
-                      <p className="mu-card-meta">{art.author} · {art.year}</p>
+                      <p className="mu-card-meta">{art.author}, {art.year}</p>
                       <div className="mu-card-footer">
                         <span className="mu-card-type">{art.art_type}</span>
                         <span className="mu-card-price"><span className="material-icons">payments</span>{art.sell?.toLocaleString()}</span>
@@ -435,8 +435,8 @@ export default function MuseumPage() {
         <div className="mu-section">
           <div className="mu-tracker">
             <div className="mu-tracker-label">
-              <span className="material-icons">emoji_events</span>
-              Fossil Collection: {fossilDonatedCount} / {fossilData.individuals.length} donated
+              <span className="mu-tracker-name"><span className="material-icons">emoji_events</span>Fossil Collection</span>
+              <span className="mu-tracker-count"><b>{fossilDonatedCount}</b> / {fossilData.individuals.length} donated</span>
             </div>
             <div className="mu-tracker-bar">
               <div className="mu-tracker-fill" style={{ width: fossilData.individuals.length ? `${(fossilDonatedCount / fossilData.individuals.length) * 100}%` : '0%' }} />
@@ -595,8 +595,8 @@ export default function MuseumPage() {
         <div className="mu-section">
           <div className="mu-tracker">
             <div className="mu-tracker-label">
-              <span className="material-icons">emoji_events</span>
-              Gyroid Catalog: {gyroidCollectedCount} / {gyroidData.length} collected
+              <span className="mu-tracker-name"><span className="material-icons">emoji_events</span>Gyroid Catalog</span>
+              <span className="mu-tracker-count"><b>{gyroidCollectedCount}</b> / {gyroidData.length} collected</span>
             </div>
             <div className="mu-tracker-bar">
               <div className="mu-tracker-fill mu-tracker-fill--gyroid" style={{ width: gyroidData.length ? `${(gyroidCollectedCount / gyroidData.length) * 100}%` : '0%' }} />

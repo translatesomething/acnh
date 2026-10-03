@@ -1,0 +1,740 @@
+/* Museum: artwork, fossils and gyroids. The star is the collection tracker and the "done" state. */
+
+.mu-page {
+  max-width: var(--page-max);
+  margin: 0 auto;
+}
+
+.mu-tabs {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto var(--s-5);
+}
+
+/* ── Tracker: how complete is the collection ───────────────────────── */
+
+.mu-tracker {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: end;
+  gap: var(--s-2) var(--s-4);
+  margin-bottom: var(--s-4);
+  padding: var(--s-4) var(--s-5);
+  border-radius: var(--r-card);
+  background: var(--c-surface);
+  border: 2px solid var(--c-line);
+  box-shadow: var(--ledge);
+}
+
+.mu-tracker-label { display: contents; }
+
+.mu-tracker-name {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-2);
+  font-family: var(--font-display);
+  font-size: var(--t-lg);
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+.mu-tracker-name .material-icons { display: none; }
+
+.mu-tracker-count {
+  color: var(--c-ink-soft);
+  font-size: var(--t-sm);
+  font-weight: 700;
+}
+
+.mu-tracker-count b {
+  font-family: var(--font-display);
+  font-size: var(--t-2xl);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--c-ink);
+}
+
+.mu-tracker-bar {
+  grid-column: 1 / -1;
+  height: 16px;
+  border-radius: var(--r-chip);
+  background: var(--c-inset);
+  border: 2px solid var(--c-line);
+  overflow: hidden;
+}
+
+.mu-tracker-fill {
+  height: 100%;
+  min-width: 0;
+  border-radius: var(--r-chip);
+  background: var(--c-ok);
+  transition: width 400ms var(--ease);
+}
+
+/* ── Filters ───────────────────────────────────────────────────────── */
+
+.mu-filters {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+}
+
+.mu-chip-row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  overflow-x: auto;
+  padding: 2px 2px 5px;
+  scrollbar-width: none;
+}
+
+.mu-chip-row::-webkit-scrollbar { display: none; }
+
+.mu-chip-label {
+  flex: none;
+  min-width: 56px;
+  color: var(--c-ink-soft);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+.mu-chip { flex: none; }
+
+@media (min-width: 761px) {
+  .mu-chip-row--wrap { flex-wrap: wrap; overflow: visible; }
+}
+
+/* ── Card grids ────────────────────────────────────────────────────── */
+
+.mu-grid {
+  display: grid;
+  gap: var(--s-4);
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.mu-grid--fossil,
+.mu-grid--gyroid {
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+}
+
+.mu-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-3);
+  border-radius: var(--r-card);
+  background: var(--c-surface);
+  border: 2px solid var(--c-line);
+  box-shadow: var(--ledge);
+  transition: border-color var(--dur) var(--ease);
+}
+
+.mu-card--art,
+.mu-card--gyroid { cursor: pointer; }
+
+.mu-card:hover { border-color: var(--c-brand); }
+
+/* The image sits on a mat, like a framed exhibit */
+.mu-card-img-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  padding: var(--s-3);
+  border-radius: var(--r-inset);
+  background: var(--c-inset);
+}
+
+.mu-card--art .mu-card-img-wrap {
+  padding: var(--s-4);
+  border: 3px solid var(--c-line);
+  outline: 2px solid var(--c-inset);
+  outline-offset: -9px;
+}
+
+.mu-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.mu-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 0 52px var(--s-1) var(--s-1);
+}
+
+.mu-card-title {
+  font-family: var(--font-display);
+  font-size: var(--t-md);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--c-ink);
+  text-transform: capitalize;
+}
+
+.mu-card-sub,
+.mu-card-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--s-1);
+  color: var(--c-ink-soft);
+  font-size: var(--t-xs);
+  font-weight: 600;
+}
+
+.mu-card-sub .material-icons { color: var(--c-info); }
+
+.mu-card-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-1) var(--s-2);
+  margin-top: var(--s-2);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+.mu-card-type,
+.mu-gyroid-vars,
+.mu-card-colors {
+  padding: 2px 8px;
+  border-radius: var(--r-chip);
+  background: var(--c-inset);
+  color: var(--c-ink);
+}
+
+.mu-card-price,
+.mu-fp-price {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--c-ink);
+  font-weight: 700;
+}
+
+.mu-card-price .material-icons,
+.mu-fp-price .material-icons {
+  font-size: 16px;
+  color: var(--c-accent-deep);
+}
+
+/* Badges on the image */
+.mu-badge {
+  position: absolute;
+  top: var(--s-2);
+  left: var(--s-2);
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: var(--r-chip);
+  background: var(--c-love);
+  color: var(--c-surface);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+.mu-badge--donated {
+  left: auto;
+  right: var(--s-2);
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  justify-content: center;
+  background: var(--c-ok);
+  color: var(--c-surface);
+  border: 2px solid var(--c-surface);
+}
+
+.mu-badge--donated .material-icons { font-size: 20px; }
+
+/* Donate button: a round stamp in the card corner */
+.mu-donate-btn {
+  position: absolute;
+  right: var(--s-3);
+  bottom: var(--s-3);
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--c-accent);
+  border: 2px solid var(--c-accent-deep);
+  color: var(--c-on-accent);
+  box-shadow: var(--ledge-accent);
+  transition: transform var(--dur) var(--ease), box-shadow var(--dur) var(--ease);
+}
+
+.mu-donate-btn:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--c-accent-deep);
+}
+
+.mu-donate-btn .material-icons { font-size: 24px; }
+
+.mu-donate-btn.active {
+  background: var(--c-ok);
+  border-color: var(--c-ok);
+  color: var(--c-surface);
+  box-shadow: none;
+}
+
+/* Donated: a calmer card that reads as done */
+.mu-card.donated,
+.mu-card.collected {
+  background: var(--c-bg);
+  border-style: dashed;
+  box-shadow: none;
+}
+
+.mu-card.donated .mu-card-title,
+.mu-card.collected .mu-card-title { color: var(--c-ink-soft); }
+
+.mu-card.donated .mu-card-img-wrap,
+.mu-card.collected .mu-card-img-wrap { background: var(--c-surface); }
+
+.mu-card.donated .mu-card-img,
+.mu-card.collected .mu-card-img { opacity: 0.85; }
+
+/* ── Fossil groups ─────────────────────────────────────────────────── */
+
+.mu-fossil-groups {
+  display: grid;
+  gap: var(--s-4);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 360px), 1fr));
+  align-items: start;
+}
+
+.mu-fossil-group {
+  padding: var(--s-3);
+  border-radius: var(--r-card);
+  background: var(--c-surface);
+  border: 2px solid var(--c-line);
+  box-shadow: var(--ledge);
+}
+
+.mu-fossil-group.complete {
+  background: var(--c-bg);
+  border-color: var(--c-ok);
+  border-style: dashed;
+  box-shadow: none;
+}
+
+.mu-fg-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-1) var(--s-1) var(--s-3);
+  cursor: pointer;
+}
+
+.mu-fg-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+}
+
+.mu-fg-title-row h4 {
+  font-family: var(--font-display);
+  font-size: var(--t-md);
+  font-weight: 600;
+  color: var(--c-ink);
+  text-transform: capitalize;
+}
+
+.mu-fg-header:hover h4 { color: var(--c-brand); }
+
+.mu-fg-room {
+  flex: none;
+  padding: 2px 10px;
+  border-radius: var(--r-chip);
+  background: var(--c-inset);
+  color: var(--c-ink);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+.mu-fg-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.mu-fg-progress-bar {
+  flex: 1;
+  height: 12px;
+  border-radius: var(--r-chip);
+  background: var(--c-inset);
+  border: 2px solid var(--c-line);
+  overflow: hidden;
+}
+
+.mu-fg-progress-fill {
+  height: 100%;
+  border-radius: var(--r-chip);
+  background: var(--c-ok);
+  transition: width 400ms var(--ease);
+}
+
+.mu-fg-progress-text {
+  min-width: 36px;
+  text-align: right;
+  font-family: var(--font-display);
+  font-size: var(--t-sm);
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+.mu-fg-pieces {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: var(--s-2);
+}
+
+.mu-fossil-piece {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--s-2);
+  border: 2px solid transparent;
+  border-radius: var(--r-inset);
+  background: var(--c-inset);
+}
+
+.mu-fossil-piece img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+}
+
+.mu-fp-name {
+  max-width: 100%;
+  text-align: center;
+  font-size: var(--t-xs);
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--c-ink);
+  text-transform: capitalize;
+}
+
+.mu-fp-price { font-size: var(--t-xs); }
+
+.mu-donate-sm {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  color: var(--c-ink-soft);
+}
+
+.mu-donate-sm:hover { color: var(--c-brand); }
+.mu-donate-sm .material-icons { font-size: 26px; }
+.mu-donate-sm.active { color: var(--c-ok); }
+
+.mu-fossil-piece.donated {
+  background: var(--c-surface);
+  border: 2px dashed var(--c-ok);
+}
+
+.mu-fossil-piece.donated .mu-fp-name { color: var(--c-ink-soft); }
+
+/* ── Detail modals ─────────────────────────────────────────────────── */
+
+.mu-modal h2 {
+  padding-right: 48px;
+  font-family: var(--font-display);
+  font-size: var(--t-xl);
+  font-weight: 600;
+  line-height: 1.15;
+  color: var(--c-ink);
+  text-transform: capitalize;
+}
+
+.mu-modal h4 {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  margin-bottom: var(--s-2);
+  font-family: var(--font-display);
+  font-size: var(--t-md);
+  font-weight: 600;
+  color: var(--c-ink);
+}
+
+.mu-modal h4 .material-icons { font-size: 20px; color: var(--c-info); }
+
+.mu-art-detail {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: var(--s-5);
+  align-items: start;
+}
+
+.mu-art-detail-images {
+  margin-top: 36px;
+  display: grid;
+  gap: var(--s-3);
+}
+
+.mu-art-detail:has(.mu-art-fake) { grid-template-columns: 1fr; }
+
+/* With a fake, the pair sits side by side so the differences are easy to spot */
+.mu-art-detail-images:has(.mu-art-fake) {
+  grid-template-columns: 1fr 1fr;
+}
+
+.mu-art-real,
+.mu-art-fake {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  padding: var(--s-3);
+  border-radius: var(--r-inset);
+  background: var(--c-inset);
+}
+
+.mu-art-real h4,
+.mu-art-fake h4 {
+  align-self: flex-start;
+  margin: 0;
+  padding: 2px 12px;
+  border-radius: var(--r-chip);
+  font-size: var(--t-sm);
+  color: var(--c-surface);
+}
+
+.mu-art-real h4 { background: var(--c-ok); }
+.mu-art-fake h4 { background: var(--c-love); }
+
+.mu-art-fake { outline: 2px dashed var(--c-love); outline-offset: -2px; }
+
+.mu-art-real img,
+.mu-art-fake img {
+  width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+  padding: var(--s-2);
+  border-radius: 8px;
+  background: var(--c-surface);
+}
+
+.mu-art-detail-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  min-width: 0;
+}
+
+.mu-art-realname {
+  margin-top: calc(var(--s-3) * -1);
+  color: var(--c-ink-soft);
+  font-weight: 600;
+}
+
+.mu-art-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: var(--s-2);
+}
+
+.mu-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: var(--s-2) var(--s-3);
+  border-radius: var(--r-inset);
+  background: var(--c-inset);
+  color: var(--c-ink);
+  font-weight: 700;
+}
+
+.mu-meta-label {
+  color: var(--c-ink-soft);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+.mu-art-description,
+.mu-art-authenticity,
+.mu-fd-desc {
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-inset);
+  background: var(--c-inset);
+}
+
+.mu-art-description p,
+.mu-fd-desc p { font-size: var(--t-sm); }
+
+.mu-art-authenticity {
+  background: var(--c-surface);
+  border: 2px solid var(--c-love);
+}
+
+.mu-art-authenticity h4 .material-icons { color: var(--c-love); }
+.mu-art-authenticity p { font-size: var(--t-sm); font-weight: 600; }
+
+.mu-art-texture-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--s-3);
+}
+
+.mu-art-texture-row > div {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+  padding: var(--s-2);
+  border-radius: var(--r-inset);
+  background: var(--c-inset);
+}
+
+.mu-art-texture-row img {
+  width: 100%;
+  border-radius: 8px;
+  background: var(--c-surface);
+}
+
+.mu-tex-label {
+  color: var(--c-ink-soft);
+  font-size: var(--t-xs);
+  font-weight: 700;
+}
+
+.mu-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-4);
+  margin-top: var(--s-2);
+}
+
+.mu-donate-action.active {
+  background: var(--c-ok);
+  border-color: var(--c-ok);
+  color: var(--c-surface);
+  box-shadow: none;
+}
+
+.mu-fossil-detail {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--s-3);
+}
+
+.mu-fd-room {
+  padding: 2px 12px;
+  border-radius: var(--r-chip);
+  background: var(--c-inset);
+  font-weight: 700;
+}
+
+.mu-fd-desc { width: 100%; }
+
+/* Gyroid */
+.mu-gyroid-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.mu-gd-header {
+  display: flex;
+  align-items: center;
+  gap: var(--s-4);
+  padding-right: 48px;
+}
+
+.mu-gd-hero {
+  flex: none;
+  width: 96px;
+  height: 96px;
+  padding: var(--s-2);
+  object-fit: contain;
+  border-radius: var(--r-inset);
+  background: var(--c-inset);
+}
+
+.mu-gd-header h2 { padding-right: 0; }
+
+.mu-gd-sound {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  margin-top: var(--s-1);
+  color: var(--c-info);
+  font-weight: 700;
+}
+
+.mu-gd-sound .material-icons { font-size: 20px; }
+
+.mu-gd-var-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: var(--s-2);
+}
+
+.mu-gd-var-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--s-2);
+  border-radius: var(--r-inset);
+  background: var(--c-inset);
+  text-align: center;
+}
+
+.mu-gd-var-item img {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+}
+
+.mu-gd-var-name {
+  font-size: var(--t-xs);
+  font-weight: 700;
+  color: var(--c-ink);
+}
+
+.mu-gd-var-colors {
+  font-size: var(--t-xs);
+  color: var(--c-ink-soft);
+}
+
+/* ── Phones ────────────────────────────────────────────────────────── */
+
+@media (max-width: 760px) {
+  .mu-tabs { width: 100%; }
+  .mu-tab { flex: 1; padding: 0 var(--s-3); }
+
+  .mu-tracker { padding: var(--s-3) var(--s-4); }
+  .mu-tracker-count b { font-size: var(--t-xl); }
+  .mu-tracker-name { font-size: var(--t-md); }
+
+  .mu-grid,
+  .mu-grid--fossil,
+  .mu-grid--gyroid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-3); }
+
+  .mu-card { padding: var(--s-2); gap: var(--s-2); }
+  .mu-card-body { padding-right: 0; padding-bottom: 44px; }
+  .mu-donate-btn { right: var(--s-2); bottom: var(--s-2); }
+  .mu-card-title { font-size: var(--t-sm); }
+
+  .mu-fossil-groups { grid-template-columns: 1fr; }
+  .mu-fg-pieces { grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); }
+
+  .mu-art-detail { grid-template-columns: 1fr; gap: var(--s-4); }
+  .mu-art-real img,
+  .mu-art-fake img { max-height: 220px; }
+  .mu-modal h2 { font-size: var(--t-lg); }
+  .mu-detail-actions .mu-donate-action { flex: 1; }
+}

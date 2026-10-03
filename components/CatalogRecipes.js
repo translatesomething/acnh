@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { getRecipes, getRecipeItem, getRecipesByMaterial } from '../lib/api';
-import { loadSet, saveSet, saveCache, clearCache, getBuyPrice, formatApiErrorMessage, indexByName } from '../lib/catalogUtils';
+import { loadSet, saveSet, saveCache, getBuyPrice, formatApiErrorMessage, indexByName } from '../lib/catalogUtils';
 import { Pagination, DetailModal, DetailActions, ErrorRetry, SlowLoadingMessage } from './CatalogFurniture';
 
 const COMMON_MATERIALS = ['Iron Nugget', 'Wood', 'Softwood', 'Hardwood', 'Stone', 'Clay', 'Gold Nugget', 'Star Fragment', 'Bamboo Piece', 'Tree Branch'];
@@ -157,9 +157,6 @@ export default function CatalogRecipes() {
             <button className={`ct-toggle-chip ${showShoppingPanel ? 'active' : ''}`} onClick={() => setShowShoppingPanel(!showShoppingPanel)}>
               <span className="material-icons" style={{ fontSize: 16 }}>shopping_cart</span> Shopping List
             </button>
-            <button className="ct-toggle-chip" onClick={() => { clearCache('recipe', 'all'); setCache({}); setRefreshKey(k => k + 1); }}>
-              <span className="material-icons" style={{ fontSize: 16 }}>refresh</span> Refresh
-            </button>
           </div>
         </div>
       </div>
@@ -204,7 +201,7 @@ export default function CatalogRecipes() {
                   {item ? <>
                     <div className="ct-card-footer">
                       {item.sell && <span className="ct-card-price"><span className="material-icons">payments</span>{item.sell.toLocaleString()}</span>}
-                      {item.materials?.length > 0 && <span className="ct-card-vars">{item.materials.length} mats</span>}
+                      {item.materials?.length > 0 && <span className="ct-card-vars">{item.materials.length} {item.materials.length === 1 ? 'mat' : 'mats'}</span>}
                     </div>
                   </> : <div className="ct-card-shimmer-text" />}
                 </div>
