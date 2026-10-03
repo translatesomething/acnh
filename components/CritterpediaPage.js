@@ -119,7 +119,7 @@ export default function CritterpediaPage() {
         if (cancelled) return;
         setData(Array.isArray(result) ? result : []);
       })
-      .catch(() => { if (!cancelled) setError('Failed to load data. Please check your API key.'); })
+      .catch(() => { if (!cancelled) setError('Failed to load data. Please try again.'); })
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [critterType]);
@@ -132,7 +132,7 @@ export default function CritterpediaPage() {
       const result = await getCritters(type);
       setData(Array.isArray(result) ? result : []);
     } catch {
-      setError('Failed to load data. Please check your API key.');
+      setError('Failed to load data. Please try again.');
     } finally {
       setLoading(false);
     }

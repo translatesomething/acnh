@@ -58,74 +58,44 @@ export default function MuseumPage() {
 
   useEffect(() => { setCurrentPage(1); }, [tab, artSearch, artTypeFilter, artFakeFilter, fossilSearch, fossilViewMode, gyroidSearch, gyroidSoundFilter]);
 
-  const artCancelledRef = useRef(false);
-  const fossilCancelledRef = useRef(false);
-  const gyroidCancelledRef = useRef(false);
+  // Each tab's data loads once, the first time the tab opens. A load keeps running
+  // when the user switches tabs, so its loading flag is always cleared; only an
+  // unmounted page skips the state updates.
+  const mountedRef = useRef(true);
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
 
-  // Fetch art
   const loadArt = () => {
     setArtError(null);
     setArtLoading(true);
-    artCancelledRef.current = false;
     getArt()
-      .then(d => { if (!artCancelledRef.current) setArtData(Array.isArray(d) ? d : []); })
-      .catch(e => { if (!artCancelledRef.current) setArtError(e?.message || 'Failed to load art.'); })
-      .finally(() => { if (!artCancelledRef.current) setArtLoading(false); });
+      .then(d => { if (mountedRef.current) setArtData(Array.isArray(d) ? d : []); })
+      .catch(e => { if (mountedRef.current) setArtError(e?.message || 'Failed to load art.'); })
+      .finally(() => { if (mountedRef.current) setArtLoading(false); });
   };
-  useEffect(() => {
-    if (tab !== 'art' || artData.length > 0 || artLoading) return;
-    artCancelledRef.current = false;
-    setArtError(null);
-    setArtLoading(true);
-    getArt()
-      .then(d => { if (!artCancelledRef.current) setArtData(Array.isArray(d) ? d : []); })
-      .catch(e => { if (!artCancelledRef.current) setArtError(e?.message || 'Failed to load art.'); })
-      .finally(() => { if (!artCancelledRef.current) setArtLoading(false); });
-    return () => { artCancelledRef.current = true; };
-  }, [tab]);
-
-  // Fetch fossils
   const loadFossils = () => {
     setFossilError(null);
     setFossilLoading(true);
-    fossilCancelledRef.current = false;
     getFossils()
-      .then(d => { if (!fossilCancelledRef.current) setFossilData(d || { individuals: [], groups: [] }); })
-      .catch(e => { if (!fossilCancelledRef.current) setFossilError(e?.message || 'Failed to load fossils.'); })
-      .finally(() => { if (!fossilCancelledRef.current) setFossilLoading(false); });
+      .then(d => { if (mountedRef.current) setFossilData(d || { individuals: [], groups: [] }); })
+      .catch(e => { if (mountedRef.current) setFossilError(e?.message || 'Failed to load fossils.'); })
+      .finally(() => { if (mountedRef.current) setFossilLoading(false); });
   };
-  useEffect(() => {
-    if (tab !== 'fossils' || fossilData.individuals.length > 0 || fossilLoading) return;
-    fossilCancelledRef.current = false;
-    setFossilError(null);
-    setFossilLoading(true);
-    getFossils()
-      .then(d => { if (!fossilCancelledRef.current) setFossilData(d || { individuals: [], groups: [] }); })
-      .catch(e => { if (!fossilCancelledRef.current) setFossilError(e?.message || 'Failed to load fossils.'); })
-      .finally(() => { if (!fossilCancelledRef.current) setFossilLoading(false); });
-    return () => { fossilCancelledRef.current = true; };
-  }, [tab]);
-
-  // Fetch gyroids
   const loadGyroids = () => {
     setGyroidError(null);
     setGyroidLoading(true);
-    gyroidCancelledRef.current = false;
     getGyroids()
-      .then(d => { if (!gyroidCancelledRef.current) setGyroidData(Array.isArray(d) ? d : []); })
-      .catch(e => { if (!gyroidCancelledRef.current) setGyroidError(e?.message || 'Failed to load gyroids.'); })
-      .finally(() => { if (!gyroidCancelledRef.current) setGyroidLoading(false); });
+      .then(d => { if (mountedRef.current) setGyroidData(Array.isArray(d) ? d : []); })
+      .catch(e => { if (mountedRef.current) setGyroidError(e?.message || 'Failed to load gyroids.'); })
+      .finally(() => { if (mountedRef.current) setGyroidLoading(false); });
   };
+
   useEffect(() => {
-    if (tab !== 'gyroids' || gyroidData.length > 0 || gyroidLoading) return;
-    gyroidCancelledRef.current = false;
-    setGyroidError(null);
-    setGyroidLoading(true);
-    getGyroids()
-      .then(d => { if (!gyroidCancelledRef.current) setGyroidData(Array.isArray(d) ? d : []); })
-      .catch(e => { if (!gyroidCancelledRef.current) setGyroidError(e?.message || 'Failed to load gyroids.'); })
-      .finally(() => { if (!gyroidCancelledRef.current) setGyroidLoading(false); });
-    return () => { gyroidCancelledRef.current = true; };
+    if (tab === 'art' && artData.length === 0 && !artLoading) loadArt();
+    if (tab === 'fossils' && fossilData.individuals.length === 0 && !fossilLoading) loadFossils();
+    if (tab === 'gyroids' && gyroidData.length === 0 && !gyroidLoading) loadGyroids();
   }, [tab]);
 
   // ─── Art logic ─────────────────────────────────────────

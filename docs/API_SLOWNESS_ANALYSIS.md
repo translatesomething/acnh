@@ -1,5 +1,9 @@
 # Phân tích chậm / timeout API (trừ Villagers)
 
+> **Đã thay thế.** Web không còn gọi API Nookipedia trên trình duyệt. Dữ liệu được tải sẵn bằng `npm run fetch-data` vào `public/data/` (xem README, mục "Updating the data"). Các phần timeout, retry, stale-while-revalidate và proxy bên dưới chỉ còn giá trị tham khảo.
+>
+> Nguyên nhân gốc tìm được sau này: trình duyệt gửi request OPTIONS (preflight) không kèm khóa API, nginx của Nookipedia trả 401 nên mọi request bị CORS chặn.
+
 ## 1. Vấn đề đã gặp
 
 | Hiện tượng | Nguyên nhân khả dĩ |

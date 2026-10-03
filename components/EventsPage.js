@@ -42,7 +42,7 @@ export default function EventsPage() {
       const data = await getEvents();
       setAllEvents(Array.isArray(data) ? data : []);
     } catch {
-      setError('Failed to load events. Please check your API key.');
+      setError('Failed to load events. Please try again.');
     } finally {
       setLoading(false);
     }

@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { getItemNames, getItemDetail, getItems } from '../lib/api';
-import { getBuyPrice, loadCache, saveCache, formatApiErrorMessage } from '../lib/catalogUtils';
+import { getItemDetail, getItems } from '../lib/api';
+import { getBuyPrice, saveCache, formatApiErrorMessage, indexByName } from '../lib/catalogUtils';
 import { DetailModal, DetailActions, ErrorRetry, Pagination, SlowLoadingMessage } from './CatalogFurniture';
 
 const ITEMS_PER_PAGE = 24;
@@ -31,7 +31,7 @@ function groupItems(items) {
 
 export default function CatalogItems() {
   const [allNames, setAllNames] = useState([]);
-  const [detailsCache, setDetailsCache] = useState(() => loadCache('item', 'all'));
+  const [detailsCache, setDetailsCache] = useState({});
   const [namesLoading, setNamesLoading] = useState(true);
   const [fullItems, setFullItems] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -45,21 +45,16 @@ export default function CatalogItems() {
   const [retryKey, setRetryKey] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Load names only (fast) — stale-while-revalidate: show cache first
+  // Names and details both come from the local data, so every card and every filter
+  // has what it needs as soon as the list shows.
   useEffect(() => {
     let cancelled = false;
     setError(null);
-    const cached = loadCache('item', 'all');
-    const cachedNames = Object.keys(cached);
-    if (cachedNames.length > 0) {
-      setAllNames(cachedNames);
-      setNamesLoading(false);
-    } else {
-      setNamesLoading(true);
-    }
-    getItemNames().then(data => {
+    setNamesLoading(true);
+    getItems().then(items => {
       if (cancelled) return;
-      setAllNames(Array.isArray(data) ? data : []);
+      setAllNames(items.map(item => item.name));
+      setDetailsCache(indexByName(items));
       setNamesLoading(false);
     }).catch(e => {
       if (!cancelled) { setNamesLoading(false); setError(formatApiErrorMessage(e)); }

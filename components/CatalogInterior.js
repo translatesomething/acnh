@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { getInteriorNames, getInteriorItem, INTERIOR_CATEGORIES, FURNITURE_COLORS } from '../lib/api';
-import { loadSet, saveSet, loadCache, saveCache, clearCache, getBuyPrice, formatApiErrorMessage } from '../lib/catalogUtils';
+import { getInteriorByCategory, getInteriorItem, INTERIOR_CATEGORIES, FURNITURE_COLORS } from '../lib/api';
+import { loadSet, saveSet, saveCache, clearCache, getBuyPrice, formatApiErrorMessage, indexByName } from '../lib/catalogUtils';
 import { CatalogGrid, Pagination, DetailModal, DetailActions, ErrorRetry, SlowLoadingMessage } from './CatalogFurniture';
 
 export default function CatalogInterior() {
@@ -22,22 +22,19 @@ export default function CatalogInterior() {
   const [refreshKey, setRefreshKey] = useState(0);
   const PER_PAGE = 24;
 
+  // Names and details both come from the local data, so every card and every filter
+  // has what it needs as soon as the list shows.
   useEffect(() => {
     let cancelled = false;
     setError(null); setPage(1);
-    const cached = loadCache('int', category);
-    setCache(cached);
-    const cachedNames = Object.keys(cached);
-    if (cachedNames.length > 0) {
-      setAllNames(cachedNames);
-      setLoading(false);
-    } else {
-      setAllNames([]);
-      setLoading(true);
-    }
-    getInteriorNames(category).then(names => {
+    setAllNames([]);
+    setCache({});
+    setLoading(true);
+    getInteriorByCategory(category).then(items => {
       if (cancelled) return;
-      setAllNames(names); setLoading(false);
+      setAllNames(items.map(item => item.name));
+      setCache(indexByName(items));
+      setLoading(false);
     }).catch(e => { if (!cancelled) { setLoading(false); setError(formatApiErrorMessage(e)); } });
     return () => { cancelled = true; };
   }, [category, refreshKey]);

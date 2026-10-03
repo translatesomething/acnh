@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { getFurnitureNames, getFurnitureItem, FURNITURE_CATEGORIES, FURNITURE_COLORS } from '../lib/api';
-import { loadSet, saveSet, loadCache, saveCache, clearCache, getPageNumbers, getBuyPrice, formatApiErrorMessage } from '../lib/catalogUtils';
+import { getFurnitureByCategory, getFurnitureItem, FURNITURE_CATEGORIES, FURNITURE_COLORS } from '../lib/api';
+import { loadSet, saveSet, saveCache, clearCache, getPageNumbers, getBuyPrice, formatApiErrorMessage, indexByName } from '../lib/catalogUtils';
 
 export default function CatalogFurniture() {
   const [category, setCategory] = useState('Housewares');
@@ -24,23 +24,19 @@ export default function CatalogFurniture() {
   const [refreshKey, setRefreshKey] = useState(0);
   const PER_PAGE = 20;
 
+  // Names and details both come from the local data, so every card and every filter
+  // has what it needs as soon as the list shows.
   useEffect(() => {
     let cancelled = false;
     setError(null);
     setPage(1);
-    const cached = loadCache('fur', category);
-    setDetailsCache(cached);
-    const cachedNames = Object.keys(cached);
-    if (cachedNames.length > 0) {
-      setAllNames(cachedNames);
-      setNamesLoading(false);
-    } else {
-      setAllNames([]);
-      setNamesLoading(true);
-    }
-    getFurnitureNames(category).then(names => {
+    setAllNames([]);
+    setDetailsCache({});
+    setNamesLoading(true);
+    getFurnitureByCategory(category).then(items => {
       if (cancelled) return;
-      setAllNames(names);
+      setAllNames(items.map(item => item.name));
+      setDetailsCache(indexByName(items));
       setNamesLoading(false);
     }).catch(e => {
       if (cancelled) return;
@@ -264,7 +260,7 @@ function FurnitureDetail({ item, owned, wishlist, onOwn, onWish }) {
         <div className="ct-info-item"><span className="ct-info-label">Buy Price</span><span>{bells ? `${bells.toLocaleString()} Bells` : 'Not for sale'}</span>
           {poki && <span className="ct-info-sub">{poki.toLocaleString()} Poki</span>}{miles && <span className="ct-info-sub">{miles.toLocaleString()} Nook Miles</span>}</div>
         <div className="ct-info-item"><span className="ct-info-label">Sell Price</span><span>{item.sell ? `${item.sell.toLocaleString()} Bells` : '—'}</span></div>
-        <div className="ct-info-item"><span className="ct-info-label">Size</span><span>{item.grid_width}×{item.grid_length}{item.height ? ` (h: ${item.height.toFixed(1)})` : ''}</span></div>
+        <div className="ct-info-item"><span className="ct-info-label">Size</span><span>{item.grid_width}×{item.grid_length}{item.height ? ` (h: ${Number(item.height).toFixed(1)})` : ''}</span></div>
         <div className="ct-info-item"><span className="ct-info-label">HHA</span><span>{item.hha_base} pts{item.hha_category ? ` (${item.hha_category})` : ''}</span></div>
         {item.functions?.length > 0 && <div className="ct-info-item"><span className="ct-info-label">Functions</span><span>{item.functions.join(', ')}</span></div>}
         {item.customizable && <div className="ct-info-item"><span className="ct-info-label">Customizable</span><span>{item.custom_kits} {item.custom_kit_type || 'kit'}{item.custom_body_part ? ` (${item.custom_body_part})` : ''}</span></div>}

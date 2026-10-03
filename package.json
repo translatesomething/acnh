@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "node scripts/kill-port.js 3000 && next dev",
     "kill-port": "node scripts/kill-port.js",
+    "fetch-data": "node scripts/fetch-data.mjs",
     "build": "next build",
     "build:gh-pages": "next build",
     "export": "next build",

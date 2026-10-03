@@ -5,6 +5,8 @@ on:
     branches:
       - main  # hoặc 'master' nếu bạn dùng master branch
   workflow_dispatch:
+  schedule:
+    - cron: '0 3 * * 1'  # weekly data refresh (Mondays 03:00 UTC)
 
 permissions:
   contents: read
@@ -34,12 +36,17 @@ jobs:
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
+      # Best effort: fetch fresh data into public/data. If it fails (or the secret
+      # is missing) the deploy continues with the data files committed in the repo.
+      - name: Refresh Nookipedia data
+        env:
+          NOOKIPEDIA_API_KEY: ${{ secrets.NOOKIPEDIA_API_KEY }}
+        run: npm run fetch-data || echo "::warning::Data refresh failed; deploying the committed data files."
+
       - name: Build with Next.js
         env:
           NODE_ENV: production
           GITHUB_REPOSITORY: ${{ github.repository }}
-          NEXT_PUBLIC_NOOKIPEDIA_API_KEY: ${{ secrets.NOOKIPEDIA_API_KEY }}
-          NEXT_PUBLIC_NOOKIPEDIA_API_URL: https://api.nookipedia.com
         run: npm run build
 
       - name: Upload artifact

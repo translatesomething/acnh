@@ -13,14 +13,14 @@ git remote add origin https://github.com/your-username/acnh.git
 git push -u origin main
 ```
 
-## Bước 2: Thêm API Key vào GitHub Secrets
+## Bước 2: (Tuỳ chọn) Thêm API Key vào GitHub Secrets để tự làm mới dữ liệu
 
 1. Vào repository trên GitHub
 2. Vào **Settings** > **Secrets and variables** > **Actions**
 3. Click **New repository secret**
 4. Thêm secret:
    - **Name**: `NOOKIPEDIA_API_KEY`
-   - **Value**: API key của bạn (97152a5c-9c98-47e7-9f08-e6b52b3f8751)
+   - **Value**: API key của bạn (không ghi key thật vào file trong repo)
 5. Click **Add secret**
 
 ## Bước 3: Enable GitHub Pages
@@ -47,18 +47,18 @@ git push
 
 - **Base Path**: Nếu tên repo khác `acnh`, cần sửa `basePath` trong `next.config.js`
 - **Custom Domain**: Nếu dùng custom domain, set `USE_BASE_PATH=false` trong workflow
-- **API Key**: Luôn được bảo vệ trong GitHub Secrets, không bao giờ lộ ra public
+- **Dữ liệu**: Web đọc file JSON trong `public/data/`, không gọi API trên trình duyệt. Key chỉ dùng khi chạy `npm run fetch-data` (máy bạn hoặc GitHub Actions)
 
 ## Troubleshooting
 
 ### Build fails
-- Kiểm tra xem đã thêm `NOOKIPEDIA_API_KEY` vào Secrets chưa
+- Kiểm tra logs trong tab **Actions**; nếu bước làm mới dữ liệu báo warning thì web vẫn deploy bằng dữ liệu đã commit
 - Kiểm tra logs trong tab **Actions**
 
 ### 404 Error
 - Kiểm tra `basePath` trong `next.config.js` có đúng tên repo không
 - Đảm bảo `trailingSlash: true` trong config
 
-### API không hoạt động
-- Kiểm tra API key trong Secrets
+### Dữ liệu không hiện
+- Kiểm tra `public/data/` có đủ file JSON (chạy `npm run fetch-data`)
 - Kiểm tra console trong browser để xem lỗi

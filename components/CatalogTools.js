@@ -1,15 +1,15 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { getToolNames, getToolItem, getTools } from '../lib/api';
-import { loadSet, saveSet, loadCache, saveCache, getBuyPrice, formatApiErrorMessage } from '../lib/catalogUtils';
+import { getToolItem, getTools } from '../lib/api';
+import { loadSet, saveSet, saveCache, getBuyPrice, formatApiErrorMessage, indexByName } from '../lib/catalogUtils';
 import { DetailModal, DetailActions, ErrorRetry, Pagination, SlowLoadingMessage } from './CatalogFurniture';
 
 const TOOLS_PER_PAGE = 24;
 
 export default function CatalogTools() {
   const [allNames, setAllNames] = useState([]);
-  const [detailsCache, setDetailsCache] = useState(() => loadCache('tool', 'all'));
+  const [detailsCache, setDetailsCache] = useState({});
   const [namesLoading, setNamesLoading] = useState(true);
   const [fullItems, setFullItems] = useState(null);
   const [error, setError] = useState(null);
@@ -25,21 +25,16 @@ export default function CatalogTools() {
   const [compareItems, setCompareItems] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
 
-  // Stale-while-revalidate: show cache first
+  // Names and details both come from the local data, so every card and every filter
+  // has what it needs as soon as the list shows.
   useEffect(() => {
     let cancelled = false;
     setError(null);
-    const cached = loadCache('tool', 'all');
-    const cachedNames = Object.keys(cached);
-    if (cachedNames.length > 0) {
-      setAllNames(cachedNames);
-      setNamesLoading(false);
-    } else {
-      setNamesLoading(true);
-    }
-    getToolNames().then(data => {
+    setNamesLoading(true);
+    getTools().then(items => {
       if (cancelled) return;
-      setAllNames(Array.isArray(data) ? data : []);
+      setAllNames(items.map(item => item.name));
+      setDetailsCache(indexByName(items));
       setNamesLoading(false);
     }).catch(e => {
       if (!cancelled) { setNamesLoading(false); setError(formatApiErrorMessage(e)); }

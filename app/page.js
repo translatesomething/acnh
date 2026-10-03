@@ -203,7 +203,7 @@ export default function Home() {
     } catch (error) {
       if (!isMountedRef.current) return;
       console.error('Error loading villagers:', error);
-      setVillagerError(error?.message || 'Failed to load villagers. Check connection or API key.');
+      setVillagerError(error?.message || 'Failed to load villagers. Please try again.');
     } finally {
       if (isMountedRef.current) setLoading(false);
     }

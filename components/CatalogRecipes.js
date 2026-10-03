@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { getRecipeNames, getRecipeItem, getRecipesByMaterial } from '../lib/api';
-import { loadSet, saveSet, loadCache, saveCache, clearCache, getBuyPrice, formatApiErrorMessage } from '../lib/catalogUtils';
+import { getRecipes, getRecipeItem, getRecipesByMaterial } from '../lib/api';
+import { loadSet, saveSet, saveCache, clearCache, getBuyPrice, formatApiErrorMessage, indexByName } from '../lib/catalogUtils';
 import { Pagination, DetailModal, DetailActions, ErrorRetry, SlowLoadingMessage } from './CatalogFurniture';
 
 const COMMON_MATERIALS = ['Iron Nugget', 'Wood', 'Softwood', 'Hardwood', 'Stone', 'Clay', 'Gold Nugget', 'Star Fragment', 'Bamboo Piece', 'Tree Branch'];
@@ -10,7 +10,7 @@ const PER_PAGE = 20;
 
 export default function CatalogRecipes() {
   const [allNames, setAllNames] = useState([]);
-  const [cache, setCache] = useState(() => loadCache('recipe', 'all'));
+  const [cache, setCache] = useState({});
   const [namesLoading, setNamesLoading] = useState(true);
   const [materialList, setMaterialList] = useState(null);
   const [error, setError] = useState(null);
@@ -38,17 +38,11 @@ export default function CatalogRecipes() {
         setNamesLoading(false);
       }).catch(e => { if (!cancelled) { setNamesLoading(false); setError(formatApiErrorMessage(e)); } });
     } else {
-      const cached = loadCache('recipe', 'all');
-      const cachedNames = Object.keys(cached);
-      if (cachedNames.length > 0) {
-        setAllNames(cachedNames);
-        setNamesLoading(false);
-      } else {
-        setNamesLoading(true);
-      }
-      getRecipeNames().then(names => {
+      setNamesLoading(true);
+      getRecipes().then(items => {
         if (cancelled) return;
-        setAllNames(Array.isArray(names) ? names : []);
+        setAllNames(items.map(recipe => recipe.name));
+        setCache(indexByName(items));
         setNamesLoading(false);
       }).catch(e => { if (!cancelled) { setNamesLoading(false); setError(formatApiErrorMessage(e)); } });
     }

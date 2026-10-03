@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { getClothingNames, getClothingItem, CLOTHING_CATEGORIES, CLOTHING_STYLES, CLOTHING_LABEL_THEMES, FURNITURE_COLORS } from '../lib/api';
-import { loadSet, saveSet, loadCache, saveCache, clearCache, getBuyPrice, formatApiErrorMessage } from '../lib/catalogUtils';
+import { getClothingByCategory, getClothingItem, CLOTHING_CATEGORIES, CLOTHING_STYLES, CLOTHING_LABEL_THEMES, FURNITURE_COLORS } from '../lib/api';
+import { loadSet, saveSet, saveCache, clearCache, getBuyPrice, formatApiErrorMessage, indexByName } from '../lib/catalogUtils';
 import { CatalogGrid, Pagination, DetailModal, DetailActions, ErrorRetry, SlowLoadingMessage } from './CatalogFurniture';
 
 export default function CatalogClothing() {
@@ -25,22 +25,19 @@ export default function CatalogClothing() {
   const [refreshKey, setRefreshKey] = useState(0);
   const PER_PAGE = 20;
 
+  // Names and details both come from the local data, so every card and every filter
+  // has what it needs as soon as the list shows.
   useEffect(() => {
     let cancelled = false;
     setError(null); setPage(1);
-    const cached = loadCache('cloth', category);
-    setCache(cached);
-    const cachedNames = Object.keys(cached);
-    if (cachedNames.length > 0) {
-      setAllNames(cachedNames);
-      setLoading(false);
-    } else {
-      setAllNames([]);
-      setLoading(true);
-    }
-    getClothingNames(category).then(names => {
+    setAllNames([]);
+    setCache({});
+    setLoading(true);
+    getClothingByCategory(category).then(items => {
       if (cancelled) return;
-      setAllNames(names); setLoading(false);
+      setAllNames(items.map(item => item.name));
+      setCache(indexByName(items));
+      setLoading(false);
     }).catch(e => { if (!cancelled) { setLoading(false); setError(formatApiErrorMessage(e)); } });
     return () => { cancelled = true; };
   }, [category, refreshKey]);
