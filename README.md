@@ -59,7 +59,7 @@ A web application for exploring Animal Crossing: New Horizons data — villagers
   - Collection tracker with progress bar
 
 ### Catalog
-Catalog is split into seven sections with filters, detail modals, and collection tracking (localStorage). All data comes from local JSON snapshots, so each section opens without waiting on the API; a failed load shows a retry option.
+Catalog is split into seven sections with filters, detail modals, and collection tracking (localStorage). All data comes from local JSON snapshots, so each section opens without waiting on the API. Cards show their image and details right away, and the filters cover every item in the category, not only the ones you opened. A failed load shows a retry option.
 
 - **Furniture** — Housewares, Miscellaneous, Wall-mounted, Ceiling decor
   - Filter by color, series, Lucky items, Customizable
@@ -114,6 +114,8 @@ npm run build
 
 Open [http://localhost:3000](http://localhost:3000) to view the application.
 
+No API key is needed to run the site: all data is already in `public/data/`. A key is only needed to refresh that data (see [Updating the data](#updating-the-data)).
+
 ## Project Structure
 
 ```
@@ -142,7 +144,7 @@ Open [http://localhost:3000](http://localhost:3000) to view the application.
 │   └── ThemeToggle.js
 ├── lib/
 │   ├── api.js             # Data layer: reads the JSON snapshots in public/data
-│   ├── catalogUtils.js    # Catalog cache, trackers, pagination, bg load
+│   ├── catalogUtils.js    # Catalog helpers: trackers, pagination, error messages
 │   ├── game-mapping.js    # Game name mapping utility
 │   └── theme.js           # Theme context
 ├── public/
